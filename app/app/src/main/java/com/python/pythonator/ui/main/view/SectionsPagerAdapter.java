@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.python.pythonator.ui.pick.PickFragment;
+import com.python.pythonator.ui.queue.QueueFragment;
 
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
@@ -21,6 +22,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
             case 0:
             default:
                 return new PickFragment();
+            case 1:
+                return new QueueFragment();
         }
     }
 

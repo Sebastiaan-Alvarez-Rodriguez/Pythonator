@@ -40,7 +40,7 @@ public class QueueFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.backup, container, false);
+        return inflater.inflate(R.layout.fragment_queue, container, false);
     }
 
     @Override
@@ -60,17 +60,21 @@ public class QueueFragment extends Fragment {
     private void setupButtons() {
         queue_add.setOnClickListener(v -> {
             if (add_menu_expanded) {
-                queue_add.setBackgroundResource(android.R.drawable.ic_input_add);
+                add_menu_expanded = false;
+                queue_add.setImageResource(android.R.drawable.ic_input_add);
                 queue_camera.hide();
                 queue_gallery.hide();
             } else {
-                queue_add.setBackgroundResource(android.R.drawable.ic_menu_revert);
-                queue_camera.show();
+                add_menu_expanded = true;
+                queue_add.setImageResource(android.R.drawable.ic_menu_revert);
                 queue_gallery.show();
+                queue_camera.show();
             }
         });
         queue_camera.setOnClickListener(v -> capture());
         queue_gallery.setOnClickListener(v -> gallery());
+        queue_camera.hide();
+        queue_gallery.hide();
     }
 
     private void setupList() {
