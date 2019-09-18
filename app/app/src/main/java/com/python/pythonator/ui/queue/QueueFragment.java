@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.pick;
+package com.python.pythonator.ui.queue;
 
 import android.Manifest;
 import android.app.Activity;
@@ -11,23 +11,26 @@ import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.pythonator.R;
 
-public class PickFragment extends Fragment {
+public class QueueFragment extends Fragment {
     private static final int
             REQUEST_CAMERA_PERMISSION = 0,
             REQUEST_IMAGE_CAPTURE = 1,
             REQUEST_IMAGE_GALLERY = 2;
 
-    private ImageView capture_button, gallery_button;
+    private RecyclerView queue_list;
+    private FloatingActionButton queue_add, queue_camera, queue_gallery;
+    private boolean add_menu_expanded = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,19 +47,37 @@ public class PickFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         findGlobalViews(view);
         setupButtons();
+        setupList();
     }
 
-    private void findGlobalViews(final View view) {
-        capture_button = view.findViewById(R.id.main_capture);
-        gallery_button = view.findViewById(R.id.main_gallery);
+    private void findGlobalViews(View view) {
+        queue_list = view.findViewById(R.id.fragment_queue_list);
+        queue_add = view.findViewById(R.id.fragment_queue_add);
+        queue_camera = view.findViewById(R.id.fragment_queue_camera);
+        queue_gallery = view.findViewById(R.id.fragment_queue_gallery);
     }
 
     private void setupButtons() {
-        capture_button.setOnClickListener(v -> capture());
-        gallery_button.setOnClickListener(v -> gallery());
+        queue_add.setOnClickListener(v -> {
+            if (add_menu_expanded) {
+                queue_add.setBackgroundResource(android.R.drawable.ic_input_add);
+                queue_camera.hide();
+                queue_gallery.hide();
+            } else {
+                queue_add.setBackgroundResource(android.R.drawable.ic_menu_revert);
+                queue_camera.show();
+                queue_gallery.show();
+            }
+        });
+        queue_camera.setOnClickListener(v -> capture());
+        queue_gallery.setOnClickListener(v -> gallery());
     }
 
-    //https://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
+    private void setupList() {
+
+    }
+
+
     private void capture() {
         if (!checkPermission()) {
             askPermission();
@@ -82,7 +103,6 @@ public class PickFragment extends Fragment {
         return ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void askPermission() {
         requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
     }
