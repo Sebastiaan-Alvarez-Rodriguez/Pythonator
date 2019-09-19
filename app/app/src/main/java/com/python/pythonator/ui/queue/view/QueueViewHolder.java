@@ -1,5 +1,7 @@
 package com.python.pythonator.ui.queue.view;
 
+import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -48,6 +50,7 @@ public class QueueViewHolder extends ViewHolder<Image> {
     @Override
     public void set(Image image) {
         this.image = image;
+
         thumbnail_view.setImageBitmap(image.getThumbnail(thumbnail_view.getWidth(), thumbnail_view.getHeight()));
         name_view.setText(image.getName());
         date_view.setText("Created " + image.getDate());

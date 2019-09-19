@@ -25,4 +25,8 @@ public class QueueViewModel extends AndroidViewModel {
             cache = repository.getQueue();
         return cache;
     }
+
+    public void addToQueue(@NonNull Image image) {
+        repository.addToQueue(image);
+    }
 }

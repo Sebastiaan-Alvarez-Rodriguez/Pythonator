@@ -2,18 +2,21 @@ package com.python.pythonator.structures;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 public class Image {
     private Bitmap bitmap;
     private String name, date;
 
-
     private Bitmap.CompressFormat format;
+
     public Image(@NonNull Bitmap bitmap) {
         this(bitmap, "Untitled", "just now");
     }
@@ -22,6 +25,8 @@ public class Image {
         this.bitmap = bitmap;
         this.name = name;
         this.date = date;
+
+        this.format = Bitmap.CompressFormat.PNG;
     }
 
     @CheckResult
@@ -66,11 +71,15 @@ public class Image {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
 
+
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         bitmap.compress(format, 100, os);
         byte[] array = os.toByteArray();
-
+        try {
+            os.close();
+        } catch (IOException ignored){}
         return BitmapFactory.decodeByteArray(array, 0, array.length, options);
+
     }
 
     @CheckResult
@@ -90,11 +99,14 @@ public class Image {
      * @param quality Quality indicator for compressor (if format supports), between 1-100.
      */
     private void codec(Bitmap.CompressFormat format, int quality) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        bitmap.compress(format, quality, os);
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            bitmap.compress(format, quality, os);
 
-        byte[] array = os.toByteArray();
-        bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
+            byte[] array = os.toByteArray();
+            os.close();
+            bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
+        } catch (IOException ignored){}
     }
 
     /**

@@ -151,15 +151,19 @@ public class QueueFragment extends Fragment implements ActionListener {
             switch (requestCode) {
                 case REQUEST_IMAGE_CAPTURE:
                     if (data.hasExtra("data")) {
+                        //TODO: Get full image?
+                        // https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
+                        //TODO: Landscape?
+                        // https://stackoverflow.com/questions/6813166/set-orientation-of-android-camera-started-with-intent-action-image-capture
                         Bitmap photo = (Bitmap) data.getExtras().get("data");
                         Image image = new Image(photo);
-                        //TODO: do something intelligent with captured image
-                        //bitmap.compress(Bitmap.CompressFormat.PNG, quality, outStream);
+                        model.addToQueue(image);
                     }
                     break;
                 case REQUEST_IMAGE_GALLERY:
                     Uri uri = data.getData();
                     try {
+                        //TODO: Maybe should ask permission for external storage reads
                         Bitmap photo = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
                     } catch (Exception ignored) {
                         Snackbar.make(getView(), "Error retrieving file", Snackbar.LENGTH_LONG).show();
