@@ -1,0 +1,28 @@
+# Pythonator Controller
+
+This sub-project is the controller of the robot, ie what runs on the chip connected to the motors.
+Our setup includes a ripoff arduino mega (with ATmega2560 cpu), an arduino CNC shield v3, and
+two DRV8825 stepper motor drivers, one for each axis.
+
+## Required software
+
+To compile this part of the project, the following software is required:
+- meson
+- ninja
+- avr-binutils
+- avr-gcc
+- avr-libc
+- avrdude
+
+## Compiling
+
+To compile the controller:
+```
+$ mkdir build
+$ cd build
+$ meson .. --cross-file ../avr-atmega2560-cross.ini
+$ ninja
+```
+
+To use the provided `ninja flash` target to flash the chip, set the port the arduino is connected
+with by passing `-Dport=/dev/<port>` to meson (usually /dev/ttyUSB0).
