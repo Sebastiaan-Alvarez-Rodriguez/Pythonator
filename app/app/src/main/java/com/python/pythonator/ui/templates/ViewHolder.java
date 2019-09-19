@@ -14,7 +14,7 @@ public abstract class ViewHolder<T> extends RecyclerView.ViewHolder {
         this(itemView, null);
     }
 
-    public ViewHolder(@NonNull View itemView, ClickListener clickListener) {
+    public ViewHolder(@NonNull View itemView, @NonNull ClickListener clickListener) {
         super(itemView);
         this.clickListener = clickListener;
         findViews();

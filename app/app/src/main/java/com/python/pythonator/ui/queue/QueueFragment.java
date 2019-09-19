@@ -16,17 +16,27 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.pythonator.R;
+import com.python.pythonator.structures.Image;
+import com.python.pythonator.ui.queue.model.QueueViewModel;
+import com.python.pythonator.ui.queue.view.QueueAdapter;
+import com.python.pythonator.ui.templates.ActionListener;
 
-public class QueueFragment extends Fragment {
+public class QueueFragment extends Fragment implements ActionListener {
     private static final int
             REQUEST_CAMERA_PERMISSION = 0,
             REQUEST_IMAGE_CAPTURE = 1,
             REQUEST_IMAGE_GALLERY = 2;
+
+    private QueueViewModel model;
+    private QueueAdapter adapter;
 
     private RecyclerView queue_list;
     private FloatingActionButton queue_add, queue_camera, queue_gallery;
@@ -35,6 +45,7 @@ public class QueueFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        model = ViewModelProviders.of(this).get(QueueViewModel.class);
     }
 
     @Nullable
@@ -59,14 +70,22 @@ public class QueueFragment extends Fragment {
 
     private void setupButtons() {
         queue_add.setOnClickListener(v -> {
-            if (add_menu_expanded) {
+            if (adapter.isActionMode()) {
+                //delete action is here
+                //TODO: Make delete thing
+
                 add_menu_expanded = false;
-                queue_add.setImageResource(android.R.drawable.ic_input_add);
+                queue_add.setImageResource(R.drawable.ic_add);
+            } else if (add_menu_expanded) {
+                //back action is here
+                add_menu_expanded = false;
+                queue_add.setImageResource(R.drawable.ic_add);
                 queue_camera.hide();
                 queue_gallery.hide();
             } else {
+                //expand action is here
                 add_menu_expanded = true;
-                queue_add.setImageResource(android.R.drawable.ic_menu_revert);
+                queue_add.setImageResource(R.drawable.ic_back);
                 queue_gallery.show();
                 queue_camera.show();
             }
@@ -78,9 +97,23 @@ public class QueueFragment extends Fragment {
     }
 
     private void setupList() {
-
+        adapter = new QueueAdapter(this);
+        model.getQueue().observe(this, adapter);
+        queue_list.setLayoutManager(new LinearLayoutManager(getContext()));
+        queue_list.setAdapter(adapter);
+        queue_list.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
     }
 
+    private void setupAdd(View view, boolean actionMode) {
+        if (actionMode) {
+            queue_add.setImageResource(R.drawable.ic_delete);
+            queue_camera.hide();
+            queue_gallery.hide();
+        } else {
+            queue_add.setImageResource(R.drawable.ic_add);
+        }
+
+    }
 
     private void capture() {
         if (!checkPermission()) {
@@ -119,7 +152,8 @@ public class QueueFragment extends Fragment {
                 case REQUEST_IMAGE_CAPTURE:
                     if (data.hasExtra("data")) {
                         Bitmap photo = (Bitmap) data.getExtras().get("data");
-                        //TODO: do something intelligent with captured photo
+                        Image image = new Image(photo);
+                        //TODO: do something intelligent with captured image
                         //bitmap.compress(Bitmap.CompressFormat.PNG, quality, outStream);
                     }
                     break;
@@ -143,5 +177,22 @@ public class QueueFragment extends Fragment {
             else
                 capture();
         }
+    }
+
+    @Override
+    public void onClick(View view, int pos) {
+        if (!adapter.isActionMode()) {
+            Image clicked = adapter.get(pos);
+        }
+    }
+
+    @Override
+    public boolean onLongClick(View view, int pos) {
+        return true;
+    }
+
+    @Override
+    public void onActionModeChange(boolean actionMode) {
+        setupAdd(getView(), actionMode);
     }
 }
