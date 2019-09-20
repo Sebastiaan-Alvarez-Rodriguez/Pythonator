@@ -1,11 +1,14 @@
-package com.python.pythonator.ui.templates;
+package com.python.pythonator.ui.templates.adapter;
 
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.python.pythonator.util.ListUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +61,11 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * Function to add a collection of items to the list
      */
     public void add(Collection<T> items) {
-        list.addAll(items);
+        for (T item : items) {
+            list.add(item);
+            notifyItemInserted(list.size()-1);
+        }
+
     }
 
     /**
@@ -74,17 +81,11 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * Function to remove a collection of items from the list
      */
     public void remove(Collection<T> items) {
-        for (T item : items)
-            list.remove(item);
-    }
-
-    public void replaceAll(@NonNull Collection<T> items) {
-        for (int i = list.size() -1; i >= 0; i--) {
-            final T item = list.get(i);
-            if (!items.contains(item))
-                list.remove(item);
+        for (T item : items) {
+            int index = list.indexOf(item);
+            list.remove(index);
+            notifyItemRemoved(index);
         }
-        list.addAll(items);
     }
 
     /**
@@ -125,13 +126,9 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      */
     @Override
     public void onChanged(@Nullable List<T> newList) {
-        if (newList != null)
-            replaceAll(newList);
-        else
-            list.clear();
-//        List<T> removed = ListUtil.getRemoved(list, newList);
-//        List<T> added = ListUtil.getAdded(list, newList);
-//        remove(removed);
-//        add(added);
+        List<T> removed = ListUtil.getRemoved(list, newList);
+        List<T> added = ListUtil.getAdded(list, newList);
+        remove(removed);
+        add(added);
     }
 }

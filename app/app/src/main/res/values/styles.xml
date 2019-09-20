@@ -21,7 +21,6 @@
 
         <!--ImageButtons-->
         <item name="imageButtonStyle">@style/ImageButton</item>
-
         <!--text menu items in toolbars-->
         <item name="actionMenuTextColor">@color/colorWindowBackground</item>
         <item name="actionBarStyle">@style/Toolbar</item>
@@ -48,11 +47,6 @@
     <style name="Toolbar.TextAppearance" parent="Widget.AppCompat.Toolbar">
         <item name="android:textSize">22sp</item>
         <item name="android:textColor">@color/colorWindowBackground</item>
-    </style>
-
-
-    <style name="SearchView" parent="Widget.AppCompat.SearchView">
-        <item name="iconifiedByDefault">false</item>
     </style>
 
     <style name="ImageButton" parent="android:Widget.Material.ImageButton">

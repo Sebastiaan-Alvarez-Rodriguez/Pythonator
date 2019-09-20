@@ -5,12 +5,11 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
-import com.python.pythonator.ui.pick.PickFragment;
 import com.python.pythonator.ui.queue.QueueFragment;
 
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-    private static final String[] TAB_TITLES = new String[]{"Add", "Queue"};
+    private static final String[] TAB_TITLES = new String[]{"Queue"};
 
     public SectionsPagerAdapter(FragmentManager fm) {
         super(fm);
@@ -21,8 +20,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         switch (position) {
             case 0:
             default:
-                return new PickFragment();
-            case 1:
                 return new QueueFragment();
         }
     }
@@ -35,6 +32,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        return 2;
+        return 1;
     }
 }

@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.templates;
+package com.python.pythonator.ui.templates.adapter;
 
 
 

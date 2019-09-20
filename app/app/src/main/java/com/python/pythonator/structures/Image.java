@@ -2,14 +2,14 @@ package com.python.pythonator.structures;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
+import android.graphics.Matrix;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 public class Image {
     private Bitmap bitmap;
@@ -27,6 +27,7 @@ public class Image {
         this.date = date;
 
         this.format = Bitmap.CompressFormat.PNG;
+        rotateImage();
     }
 
     @CheckResult
@@ -93,6 +94,16 @@ public class Image {
     }
 
     /**
+     * Rotates the image to always be in 'landscape' mode
+     */
+    private void rotateImage() {
+        if (bitmap.getHeight() > bitmap.getWidth()) {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(270);
+            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        }
+    }
+    /**
      * Encode #bitmap to a given format.
      * @see Bitmap.CompressFormat for formats
      * @param format The format to encode to
@@ -123,17 +134,19 @@ public class Image {
         int inSampleSize = 1;
 
         if (height > reqHeight || width > reqWidth) {
-
             final int halfHeight = height / 2;
             final int halfWidth = width / 2;
 
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth)
                 inSampleSize *= 2;
-            }
         }
-
         return inSampleSize;
     }
 
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (!(obj instanceof Image))
+            return false;
+        return this.bitmap.equals(((Image) obj).bitmap);
+    }
 }

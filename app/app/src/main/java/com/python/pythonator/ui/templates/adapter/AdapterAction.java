@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.templates;
+package com.python.pythonator.ui.templates.adapter;
 
 import android.view.View;
 
@@ -75,14 +75,17 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
         return actionMode;
     }
 
+    public void deactivateActionMode() {
+        actionMode = false;
+        ((ActionListener) clickListener).onActionModeChange(false);
+        selected_items.clear();
+    }
     /**
      * @see AdapterCheckable#onChanged(List)
      * Stops action mode
      */
     @Override
     public void onChanged(@Nullable List<T> newList) {
-        actionMode = false;
-        ((ActionListener) clickListener).onActionModeChange(false);
         super.onChanged(newList);
     }
 }

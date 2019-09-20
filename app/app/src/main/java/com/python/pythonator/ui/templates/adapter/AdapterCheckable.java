@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.templates;
+package com.python.pythonator.ui.templates.adapter;
 
 import android.view.View;
 
@@ -129,5 +129,6 @@ public abstract class AdapterCheckable<T> extends Adapter<T> implements ClickLis
                 if (!newList.contains(t))
                     selected_items.remove(t);
         super.onChanged(newList);
+
     }
 }

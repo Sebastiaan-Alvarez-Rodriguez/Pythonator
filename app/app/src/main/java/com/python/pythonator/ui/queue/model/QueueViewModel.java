@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData;
 import com.python.pythonator.backend.QueueRepository;
 import com.python.pythonator.structures.Image;
 
+import java.util.Collection;
 import java.util.List;
 
 public class QueueViewModel extends AndroidViewModel {
@@ -28,5 +29,9 @@ public class QueueViewModel extends AndroidViewModel {
 
     public void addToQueue(@NonNull Image image) {
         repository.addToQueue(image);
+    }
+
+    public void removeFromQueue(@NonNull Collection<Image> images) {
+        repository.removeFromQueue(images);
     }
 }

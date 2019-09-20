@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,7 @@ import com.python.pythonator.R;
 import com.python.pythonator.structures.Image;
 import com.python.pythonator.ui.queue.model.QueueViewModel;
 import com.python.pythonator.ui.queue.view.QueueAdapter;
-import com.python.pythonator.ui.templates.ActionListener;
+import com.python.pythonator.ui.templates.adapter.ActionListener;
 
 public class QueueFragment extends Fragment implements ActionListener {
     private static final int
@@ -72,7 +73,8 @@ public class QueueFragment extends Fragment implements ActionListener {
         queue_add.setOnClickListener(v -> {
             if (adapter.isActionMode()) {
                 //delete action is here
-                //TODO: Make delete thing
+                model.removeFromQueue(adapter.getSelected());
+                adapter.deactivateActionMode();
 
                 add_menu_expanded = false;
                 queue_add.setImageResource(R.drawable.ic_add);
@@ -151,6 +153,7 @@ public class QueueFragment extends Fragment implements ActionListener {
             switch (requestCode) {
                 case REQUEST_IMAGE_CAPTURE:
                     if (data.hasExtra("data")) {
+                        Log.e("QUEUE", "Received photo");
                         //TODO: Get full image?
                         // https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
                         //TODO: Landscape?
@@ -163,12 +166,18 @@ public class QueueFragment extends Fragment implements ActionListener {
                 case REQUEST_IMAGE_GALLERY:
                     Uri uri = data.getData();
                     try {
+                        Log.e("QUEUE", "Received gallery");
                         //TODO: Maybe should ask permission for external storage reads
                         Bitmap photo = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
+                        Image image = new Image(photo);
+                        model.addToQueue(image);
                     } catch (Exception ignored) {
                         Snackbar.make(getView(), "Error retrieving file", Snackbar.LENGTH_LONG).show();
                     }
+                    break;
             }
+        } else {
+            Log.e("QUEUE", "Received canceled");
         }
     }
 
@@ -197,6 +206,7 @@ public class QueueFragment extends Fragment implements ActionListener {
 
     @Override
     public void onActionModeChange(boolean actionMode) {
+        Log.e("Actionmode", "Actionmode changed to: "+actionMode);
         setupAdd(getView(), actionMode);
     }
 }
