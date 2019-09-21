@@ -18,6 +18,7 @@ import com.python.pythonator.R;
 import com.python.pythonator.backend.bluetooth.BluetoothServer;
 import com.python.pythonator.backend.bluetooth.connectListener;
 import com.python.pythonator.ui.main.view.SectionsPagerAdapter;
+import com.python.pythonator.ui.settings.SettingsActivity;
 
 public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener, connectListener {
     private View view;
@@ -62,8 +63,8 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.main_menu_settings:
-//                intent = new Intent(this, SettingsActivity.class);
-//                startActivity(intent);
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
                 break;
             case R.id.main_menu_bluetooth:
                 break;
@@ -98,6 +99,16 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     }
 
     @Override
+    public void notFound() {
+        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_out_of_range));
+    }
+
+    @Override
+    public void notConnected() {
+        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
+    }
+
+    @Override
     public void isConnected() {
         runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
     }
@@ -105,11 +116,6 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     @Override
     public void isPending() {
         runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
-    }
-
-    @Override
-    public void notConnected() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
     }
 
     @Override
