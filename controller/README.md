@@ -1,9 +1,6 @@
 # Pythonator Controller
 
-This sub-project is the controller of the robot, ie what runs on the chip connected to the motors.
-Our setup includes a ripoff arduino uno (with ATmega328p cpu), an arduino CNC shield v3, and
-two DRV8825 stepper motor drivers, one for each axis. The pen mechanism is controlled by a small
-solenoid.
+This sub-project is the controller of the robot, ie what runs on the chip connected to the motors. Our setup includes a ripoff arduino uno (with ATmega328p cpu), an arduino CNC shield v3, and two DRV8825 stepper motor drivers, one for each axis. The pen mechanism is controlled by a small solenoid.
 
 ## Required software
 
@@ -25,5 +22,4 @@ $ meson .. --cross-file ../avr-atmega2560-cross.ini
 $ ninja
 ```
 
-To use the provided `ninja flash` target to flash the chip, set the port the arduino is connected
-with by passing `-Dport=/dev/<port>` to meson (usually /dev/ttyUSB0).
+To use the provided `ninja flash` target to flash the chip, set the port the arduino is connected with by passing `-Dport=/dev/<port>` to meson (usually /dev/ttyUSB0) and add yourself to to appropriate groups (`dialout` or `uucp` commonly).
