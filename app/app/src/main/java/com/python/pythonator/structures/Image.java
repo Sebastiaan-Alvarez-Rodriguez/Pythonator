@@ -54,6 +54,27 @@ public class Image {
         return bitmap;
     }
 
+    @CheckResult
+    public byte[] getBitmapBytes() {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        bitmap.compress(format, 100, os);
+        byte[] array = os.toByteArray();
+        try {
+            os.close();
+        } catch (IOException ignored) {}
+        return array;
+    }
+
+    @CheckResult
+    public int getWidth() {
+        return bitmap.getWidth();
+    }
+
+    @CheckResult
+    public int getHeight() {
+        return  bitmap.getHeight();
+    }
+
     /**
      * Returns a thumbnail of this image with resolution as close as possible to given resolution
      * @param requested_width Requested width for result image

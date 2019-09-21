@@ -4,5 +4,5 @@ public interface connectListener {
     void noBluetooth();
     void isConnected();
     void isPending();
-    void notFound();
+    void notConnected();
 }

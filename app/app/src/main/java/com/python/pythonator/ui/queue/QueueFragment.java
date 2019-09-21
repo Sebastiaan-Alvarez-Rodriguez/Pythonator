@@ -64,9 +64,9 @@ public class QueueFragment extends Fragment implements ActionListener {
 
     private void findGlobalViews(View view) {
         queue_list = view.findViewById(R.id.fragment_queue_list);
-        queue_add = view.findViewById(R.id.fragment_queue_add);
-        queue_camera = view.findViewById(R.id.fragment_queue_camera);
-        queue_gallery = view.findViewById(R.id.fragment_queue_gallery);
+        queue_add = getActivity().findViewById(R.id.main_fab_add);
+        queue_camera = getActivity().findViewById(R.id.main_fab_camera);
+        queue_gallery = getActivity().findViewById(R.id.main_fab_gallery);
     }
 
     private void setupButtons() {

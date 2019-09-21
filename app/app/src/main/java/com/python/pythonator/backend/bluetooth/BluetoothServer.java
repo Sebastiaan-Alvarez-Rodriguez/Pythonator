@@ -9,11 +9,14 @@ import android.util.Log;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.python.pythonator.structures.Image;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -45,15 +48,12 @@ public class BluetoothServer {
 
     //For board, use well known: 00001101-0000-1000-8000-00805F9B34FB?
     private static final UUID uuid = UUID.fromString("E1D75160-DBE1-11E9-AAEF-0800200C9A66");
-//    Valid Bluetooth hardware addresses must be as "00:11:22:33:AA:BB"
-    private static final String MAC = "00:11:22:33:AA:BB";
+    private static final String server_name = "Pythonator";
 
     public static final int REQUEST_ENABLE_BLUETOOTH = 400;
 
     private BluetoothAdapter bluetooth_adapter;
     private BluetoothSocket bluetooth_socket;
-
-    private connectListener resultInterface;
 
     private BluetoothServer() {
         bluetooth_adapter = BluetoothAdapter.getDefaultAdapter();
@@ -68,26 +68,43 @@ public class BluetoothServer {
     }
 
     /**
-     * Executes task to connect to the server
+     * Executes task to connect to the server by MAC address
      * @param resultInterface the interface which gets called with possible outcomes
      */
     public void connect(connectListener resultInterface) {
+        Log.e("OOF", "Connect called");
         ScheduledExecutorService sof = Executors.newSingleThreadScheduledExecutor();
         sof.scheduleWithFixedDelay(() -> {
             resultInterface.isPending();
-            BluetoothDevice device = bluetooth_adapter.getRemoteDevice(MAC);
+
+            if (!bluetooth_adapter.isEnabled()) {
+                Log.e("OOF", "Bluetooth is off");
+                resultInterface.noBluetooth();
+                return;
+            }
+            String device_mac = queryPaired();
+            if (device_mac == null) {
+                Log.e("OOF", "Device mac not found (notconnected)");
+                resultInterface.notConnected();
+                return;
+            }
+            BluetoothDevice device = bluetooth_adapter.getRemoteDevice(device_mac);
             try {
                 bluetooth_socket = device.createRfcommSocketToServiceRecord(uuid);
             } catch (IOException e) {
+                Log.e("OOF", "Bluetooth is off");
                 resultInterface.noBluetooth();
+                return;
             }
-
             if (bluetooth_socket != null && bluetooth_socket.isConnected()) {
+                Log.e("OOF", "Device connected!");
                 resultInterface.isConnected();
                 sof.shutdown();
             } else {
-                resultInterface.notFound();
+                Log.e("OOF", "Device was found but not connected");
+                resultInterface.notConnected();
             }
+
         }, 0, 4, TimeUnit.SECONDS);
     }
 
@@ -95,24 +112,45 @@ public class BluetoothServer {
      * Queries all known (previously connected) devices
      */
     @WorkerThread
-    private void queryPaired() {
+    private @Nullable String queryPaired() {
         Set<BluetoothDevice> paired_devices = bluetooth_adapter.getBondedDevices();
         if (paired_devices.size() > 0) {
             Log.e("Found", "There are paired devices");
-            // There are paired devices. Get the name and address of each paired device.
             for (BluetoothDevice device : paired_devices) {
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.e("Found", deviceName);
+                String device_name = device.getName();
+                String device_mac = device.getAddress();
+                Log.e("Found", "Name: "+device_name+". MAC: "+device_mac);
+                if (device_name.equals(server_name))
+                    return device_mac;
             }
         } else {
             Log.e("Found", "There are NO paired devices");
         }
-
+        return null;
     }
 
-    @WorkerThread
-    protected void sendImage(@NonNull Image image) {
+    private void sendImage(@NonNull Image image) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            if (bluetooth_socket.isConnected()) {
+                try {
+                    OutputStream out = bluetooth_socket.getOutputStream();
+                    out.write(image.getWidth());
+                    out.write(image.getHeight());
+                    out.write(image.getBitmapBytes());
+                } catch (Exception ignored){}
+
+                try {
+                    InputStream in = bluetooth_socket.getInputStream();
+                    int result = in.read();
+                    if (result == 0) {
+                        //TODO: success
+                    } else {
+                        //TODO: failure
+                    }
+                    Thread.sleep(500);
+                } catch (Exception ignored){}
+            }
+        });
 
     }
 }
