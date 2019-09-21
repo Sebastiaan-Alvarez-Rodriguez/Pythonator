@@ -18,8 +18,8 @@ To compile the controller:
 ```
 $ mkdir build
 $ cd build
-$ meson .. --cross-file ../avr-atmega2560-cross.ini
+$ meson .. --cross-file ../avr-atmega328p-cross.ini
 $ ninja
 ```
 
-To use the provided `ninja flash` target to flash the chip, set the port the arduino is connected with by passing `-Dport=/dev/<port>` to meson (usually /dev/ttyUSB0) and add yourself to to appropriate groups (`dialout` or `uucp` commonly).
+To use the provided `ninja flash` target to flash the chip, set the port the arduino is connected with by passing `-Dport=/dev/<port>` to meson (usually `/dev/ttyACM0`) and add yourself to to appropriate groups (`dialout` or `uucp` commonly).
