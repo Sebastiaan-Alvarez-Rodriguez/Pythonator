@@ -64,6 +64,7 @@ run_target(
         '-p', host_machine.cpu(),
         '-c', meson.get_cross_property('programmer'),
         '-b', meson.get_cross_property('baud_rate'),
+        '-D',
         '-U', 'flash:w:@0@:i'.format(pythonator_ihx.full_path()),
         '-P', get_option('port')
     ]

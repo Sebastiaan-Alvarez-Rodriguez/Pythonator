@@ -1,8 +1,9 @@
 # Pythonator Controller
 
 This sub-project is the controller of the robot, ie what runs on the chip connected to the motors.
-Our setup includes a ripoff arduino mega (with ATmega2560 cpu), an arduino CNC shield v3, and
-two DRV8825 stepper motor drivers, one for each axis.
+Our setup includes a ripoff arduino uno (with ATmega328p cpu), an arduino CNC shield v3, and
+two DRV8825 stepper motor drivers, one for each axis. The pen mechanism is controlled by a small
+solenoid.
 
 ## Required software
 
