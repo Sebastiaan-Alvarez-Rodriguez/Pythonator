@@ -1,7 +1,11 @@
 package com.python.pythonator.ui.main;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -21,6 +26,8 @@ import com.python.pythonator.ui.main.view.SectionsPagerAdapter;
 import com.python.pythonator.ui.settings.SettingsActivity;
 
 public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener, connectListener {
+    private static final int REQUEST_BLUETOOTH_PERMISSION = 1;
+
     private View view;
     private ViewPager view_pager;
     private TabLayout tab_layout;
@@ -34,7 +41,9 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
         setupActionBar();
         setupViewPager();
 
-        BluetoothServer.getServer().activate(this);
+        if (!checkPermission())
+            askPermission();
+        BluetoothServer.getServer(getApplicationContext()).activate(this);
     }
 
     private void findGlobalViews() {
@@ -57,6 +66,19 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null)
             actionbar.setTitle("Pythonator");
+    }
+
+    private boolean checkPermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void askPermission() {
+        requestPermissions(new String[]{Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN,
+                Manifest.permission.ACCESS_COARSE_LOCATION},
+                REQUEST_BLUETOOTH_PERMISSION);
     }
 
     @Override
@@ -85,10 +107,11 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
         if (requestCode == BluetoothServer.REQUEST_ENABLE_BLUETOOTH) {
             if (resultCode != RESULT_OK) {
                 Snackbar s = Snackbar.make(view, "Bluetooth is required to communicate with the server", Snackbar.LENGTH_INDEFINITE);
-                s.setAction("Try again", v -> BluetoothServer.getServer().activate(this));
+                s.setAction("Try again", v -> BluetoothServer.getServer(getApplicationContext()).activate(this));
                 s.show();
             } else {
-                BluetoothServer.getServer().connect(this);
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                BluetoothServer.getServer(getApplicationContext()).connect(preferences.getString("bluetooth_host", "Pythonator"), this);
             }
         }
     }

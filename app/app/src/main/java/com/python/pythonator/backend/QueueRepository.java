@@ -1,5 +1,6 @@
 package com.python.pythonator.backend;
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -20,9 +21,9 @@ public class QueueRepository {
     private MutableLiveData<List<Image>> queue;
     private BluetoothServer server;
 
-    public QueueRepository() {
+    public QueueRepository(Context application_context) {
         queue = new MutableLiveData<>();
-        server = BluetoothServer.getServer();
+        server = BluetoothServer.getServer(application_context);
     }
 
     public LiveData<List<Image>> getQueue() {

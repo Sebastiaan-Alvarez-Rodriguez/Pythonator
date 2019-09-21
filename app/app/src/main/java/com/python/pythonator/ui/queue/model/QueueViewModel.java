@@ -18,7 +18,7 @@ public class QueueViewModel extends AndroidViewModel {
 
     public QueueViewModel(@NonNull Application application) {
         super(application);
-        repository = new QueueRepository();
+        repository = new QueueRepository(application.getApplicationContext());
     }
 
     public LiveData<List<Image>> getQueue() {
