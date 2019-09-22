@@ -21,11 +21,12 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.python.pythonator.R;
 import com.python.pythonator.backend.bluetooth.BluetoothServer;
-import com.python.pythonator.backend.bluetooth.connectListener;
+import com.python.pythonator.backend.bluetooth.ConnectListener;
+import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.ui.main.view.SectionsPagerAdapter;
 import com.python.pythonator.ui.settings.SettingsActivity;
 
-public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener, connectListener {
+public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener, ConnectListener {
     private static final int REQUEST_BLUETOOTH_PERMISSION = 1;
 
     private View view;
@@ -117,28 +118,24 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     }
 
     @Override
-    public void noBluetooth() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
-    }
-
-    @Override
-    public void notFound() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_out_of_range));
-    }
-
-    @Override
-    public void notConnected() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
-    }
-
-    @Override
-    public void isConnected() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
-    }
-
-    @Override
-    public void isPending() {
-        runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
+    public void onChangeState(BluetoothConnectState state) {
+        switch (state) {
+            case PENDING:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
+                break;
+            case CONNECTED:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
+                break;
+            case NOT_FOUND:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_out_of_range));
+                break;
+            case NO_LOCATION:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_location_disabled));
+            case NO_BLUETOOTH:
+            case FAILED:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
+                break;
+        }
     }
 
     @Override

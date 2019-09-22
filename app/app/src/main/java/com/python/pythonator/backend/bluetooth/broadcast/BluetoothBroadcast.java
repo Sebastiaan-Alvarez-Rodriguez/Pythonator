@@ -8,10 +8,12 @@ import android.content.Intent;
 import android.util.Log;
 
 public class BluetoothBroadcast extends BroadcastReceiver {
-    BroadcastResultInterface result_interface;
+    private BroadcastResultInterface result_interface;
+    private int found;
 
     public BluetoothBroadcast(BroadcastResultInterface result_interface) {
         this.result_interface = result_interface;
+        found = 0;
     }
 
     @Override
@@ -20,12 +22,12 @@ public class BluetoothBroadcast extends BroadcastReceiver {
         Log.e("Broad", "action received: " + action);
 
         if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            found += 1;
             BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
             Log.e("Broad", "found device: " + device.getName());
             result_interface.onDeviceFound(device);
         } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-            Log.e("Broad", "discovery complete");
-            result_interface.onDeviceFound(null);
+            result_interface.onSearchFinished(found);
         }
     }
 }

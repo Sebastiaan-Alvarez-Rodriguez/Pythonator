@@ -23,15 +23,19 @@ public class QueueViewModel extends AndroidViewModel {
 
     public LiveData<List<Image>> getQueue() {
         if (cache == null)
-            cache = repository.getQueue();
+            cache = repository.getLocalQueue();
         return cache;
     }
 
     public void addToQueue(@NonNull Image image) {
-        repository.addToQueue(image);
+        repository.addToLocalQueue(image);
     }
 
     public void removeFromQueue(@NonNull Collection<Image> images) {
-        repository.removeFromQueue(images);
+        repository.removeFromLocalQueue(images);
+    }
+
+    public void sendImage(@NonNull Image image) {
+        repository.sendImage(image);
     }
 }
