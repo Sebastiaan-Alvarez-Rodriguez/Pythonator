@@ -33,22 +33,21 @@ struct stepper_state {
 };
 
 void stepper_line_to(struct stepper_state* state, unsigned x, unsigned y) {
-    bool dir_x, dir_y;
     int32_t delta_x, delta_y;
 
     if (state->x < x) {
-        dir_x = true;
+        STEPPER_PORT &= ~DIR_X_BIT;
         delta_x = x - state->x;
     } else {
-        dir_x = false;
+        STEPPER_PORT |= DIR_X_BIT;
         delta_x = state->x - x;
     }
 
     if (state->y < y) {
-        dir_y = true;
+        STEPPER_PORT &= ~DIR_Z_BIT;
         delta_y = y - state->y;
     } else {
-        dir_y = false;
+        STEPPER_PORT |= DIR_Z_BIT;
         delta_y = state->y - y;
     }
 
@@ -57,25 +56,9 @@ void stepper_line_to(struct stepper_state* state, unsigned x, unsigned y) {
     if (delta_x < delta_y) {
         swap_axes = true;
 
-        // int tmp = dir_x;
-        // dir_x = dir_y;
-        // dir_y = tmp;
-
         int tmp = delta_x;
         delta_x = delta_y;
         delta_y = tmp;
-    }
-
-    if (dir_x) {
-        STEPPER_PORT &= ~DIR_X_BIT;
-    } else {
-        STEPPER_PORT |= DIR_X_BIT;
-    }
-
-    if (dir_y) {
-        STEPPER_PORT &= ~DIR_Z_BIT;
-    } else {
-        STEPPER_PORT |= DIR_Z_BIT;
     }
 
     int32_t j = 0;
@@ -84,14 +67,7 @@ void stepper_line_to(struct stepper_state* state, unsigned x, unsigned y) {
         int32_t dst_a = abs(delta_y * (i + 1) - delta_x * j);
         int32_t dst_b = abs(delta_y * (i + 1) - delta_x * (j + 1));
 
-        int k;
-
-        if (dst_a < dst_b) {
-            k = 0;
-        } else {
-            k = 1;
-        }
-
+        int k = dst_a >= dst_b;
         j += k;
 
         if (swap_axes) {
