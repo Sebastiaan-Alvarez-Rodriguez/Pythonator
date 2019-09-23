@@ -17,8 +17,7 @@ add_global_arguments(
         '-ffunction-sections',
         '-fdata-sections',
         '-Wall',
-        '-Wextra',
-        '-Wconversion'
+        '-Wextra'
     ],
     language: 'c'
 )
@@ -67,5 +66,6 @@ run_target(
         '-D',
         '-U', 'flash:w:@0@:i'.format(pythonator_ihx.full_path()),
         '-P', get_option('port')
-    ]
+    ],
+    depends: pythonator_ihx
 )
