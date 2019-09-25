@@ -60,6 +60,7 @@ public class BluetoothConnector implements BroadcastResultInterface {
                     bluetooth_socket = (BluetoothSocket) m.invoke((device), params);
                     device.createBond();
                     bluetooth_socket.connect();
+                    Log.e("Connector", "Hack worked just fine");
                     connector_interface.onConnectResult(BluetoothConnectState.CONNECTED, bluetooth_socket);
                 } catch (Exception second) {
                     Log.e("Connector", "Reflection hack failed!");

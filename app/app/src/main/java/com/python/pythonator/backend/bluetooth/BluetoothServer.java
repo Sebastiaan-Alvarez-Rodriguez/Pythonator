@@ -13,9 +13,8 @@ import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnector;
 import com.python.pythonator.structures.Image;
 
+import java.io.DataOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 
 // https://examples.javacodegeeks.com/android/core/bluetooth/bluetoothadapter/android-bluetooth-example/
@@ -85,8 +84,16 @@ public class BluetoothServer {
         if (bluetooth_socket != null) {
             try {
                 bluetooth_socket.close();
+                bluetooth_socket = null;
             } catch (Exception ignored){}
         }
+    }
+
+    /**
+     * @return whether there is an active connection or not
+     */
+    public boolean isConnected() {
+        return bluetooth_adapter.isEnabled() && bluetooth_socket != null && bluetooth_socket.isConnected();
     }
 
     public void sendImage(@NonNull Image image, @NonNull SendListener listener) {
@@ -94,9 +101,8 @@ public class BluetoothServer {
             Executors.newSingleThreadExecutor().execute(() -> {
                 if (bluetooth_socket.isConnected()) {
                     try {
-                        OutputStream out = bluetooth_socket.getOutputStream();
-                        out.write(image.getWidth());
-                        out.write(image.getHeight());
+                        DataOutputStream out = new DataOutputStream(bluetooth_socket.getOutputStream());
+                        out.writeLong((long)image.getBitmapBytes().length);
                         out.write(image.getBitmapBytes());
                     } catch (Exception ignored){}
 

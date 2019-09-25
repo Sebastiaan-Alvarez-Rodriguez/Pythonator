@@ -3,31 +3,34 @@ package com.python.pythonator.structures;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 
 public class Image {
-    private Bitmap bitmap;
+    private String abs_path;
     private String name, date;
 
     private Bitmap.CompressFormat format;
 
-    public Image(@NonNull Bitmap bitmap) {
-        this(bitmap, "Untitled", "just now");
+    public Image(@NonNull String abs_path) {
+        this(abs_path, "Untitled", "just now");
     }
 
-    public Image(@NonNull Bitmap bitmap, @NonNull String name, @NonNull String date) {
-        this.bitmap = bitmap;
+    public Image(@NonNull String abs_path, @NonNull String name, @NonNull String date) {
+        this.abs_path = abs_path;
         this.name = name;
         this.date = date;
 
         this.format = Bitmap.CompressFormat.PNG;
-        rotateImage();
+//        rotateImage();
     }
 
     @CheckResult
@@ -49,13 +52,18 @@ public class Image {
     }
 
     @CheckResult
+    @WorkerThread
     public @NonNull Bitmap getBitmap(int quality) {
-        codec(format, quality);
+        Bitmap bitmap = BitmapFactory.decodeFile(abs_path);
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        bitmap.compress(format, quality, os);
         return bitmap;
     }
 
     @CheckResult
+    @WorkerThread
     public byte[] getBitmapBytes() {
+        Bitmap bitmap = BitmapFactory.decodeFile(abs_path);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         bitmap.compress(format, 100, os);
         byte[] array = os.toByteArray();
@@ -67,12 +75,18 @@ public class Image {
 
     @CheckResult
     public int getWidth() {
-        return bitmap.getWidth();
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(abs_path, o);
+        return o.outWidth;
     }
 
     @CheckResult
     public int getHeight() {
-        return  bitmap.getHeight();
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(abs_path, o);
+        return o.outHeight;
     }
 
     /**
@@ -92,16 +106,7 @@ public class Image {
 
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
-
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        bitmap.compress(format, 100, os);
-        byte[] array = os.toByteArray();
-        try {
-            os.close();
-        } catch (IOException ignored){}
-        return BitmapFactory.decodeByteArray(array, 0, array.length, options);
-
+        return BitmapFactory.decodeFile(abs_path, options);
     }
 
     @CheckResult
@@ -114,32 +119,16 @@ public class Image {
         return date;
     }
 
-    /**
-     * Rotates the image to always be in 'landscape' mode
-     */
-    private void rotateImage() {
-        if (bitmap.getHeight() > bitmap.getWidth()) {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(270);
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        }
-    }
-    /**
-     * Encode #bitmap to a given format.
-     * @see Bitmap.CompressFormat for formats
-     * @param format The format to encode to
-     * @param quality Quality indicator for compressor (if format supports), between 1-100.
-     */
-    private void codec(Bitmap.CompressFormat format, int quality) {
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            bitmap.compress(format, quality, os);
-
-            byte[] array = os.toByteArray();
-            os.close();
-            bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
-        } catch (IOException ignored){}
-    }
+//    /**
+//     * Rotates the image to always be in 'landscape' mode
+//     */
+//    private void rotateImage() {
+//        if (bitmap.getHeight() > bitmap.getWidth()) {
+//            Matrix matrix = new Matrix();
+//            matrix.postRotate(270);
+//            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+//        }
+//    }
 
     /**
      * Calculates samplesize for image downscaling/thumbnailing
@@ -168,6 +157,6 @@ public class Image {
     public boolean equals(@Nullable Object obj) {
         if (!(obj instanceof Image))
             return false;
-        return this.bitmap.equals(((Image) obj).bitmap);
+        return this.abs_path.equals(((Image) obj).abs_path);
     }
 }

@@ -2,9 +2,10 @@ package com.python.pythonator.ui.queue;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +28,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.pythonator.R;
 import com.python.pythonator.structures.Image;
+import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.queue.model.QueueViewModel;
 import com.python.pythonator.ui.queue.view.QueueAdapter;
 import com.python.pythonator.ui.templates.adapter.ActionListener;
@@ -33,7 +36,7 @@ import com.python.pythonator.ui.templates.adapter.ActionListener;
 public class QueueFragment extends Fragment implements ActionListener {
     private static final int
             REQUEST_CAMERA_PERMISSION = 0,
-            REQUEST_IMAGE_CAPTURE = 1,
+            REQUEST_GALLERY_PERMISSION = 1,
             REQUEST_IMAGE_GALLERY = 2;
 
     private QueueViewModel model;
@@ -41,7 +44,11 @@ public class QueueFragment extends Fragment implements ActionListener {
 
     private RecyclerView queue_list;
     private FloatingActionButton queue_add, queue_camera, queue_gallery;
+    private TextView queue_nothing_drawn;
+
     private boolean add_menu_expanded = false;
+
+    private CameraHandler camera_handler;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,13 +67,16 @@ public class QueueFragment extends Fragment implements ActionListener {
         findGlobalViews(view);
         setupButtons();
         setupList();
+        setupTexts();
     }
 
-    private void findGlobalViews(View view) {
+    @SuppressWarnings("ConstantConditions")
+    private void findGlobalViews(@NonNull View view) {
         queue_list = view.findViewById(R.id.fragment_local_queue_list);
         queue_add = getActivity().findViewById(R.id.main_fab_add);
         queue_camera = getActivity().findViewById(R.id.main_fab_camera);
         queue_gallery = getActivity().findViewById(R.id.main_fab_gallery);
+        queue_nothing_drawn = view.findViewById(R.id.fragment_queue_nothing_drawn);
     }
 
     private void setupButtons() {
@@ -98,6 +108,7 @@ public class QueueFragment extends Fragment implements ActionListener {
         queue_gallery.hide();
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void setupList() {
         adapter = new QueueAdapter(this);
         model.getQueue().observe(this, adapter);
@@ -106,7 +117,7 @@ public class QueueFragment extends Fragment implements ActionListener {
         queue_list.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
     }
 
-    private void setupAdd(View view, boolean actionMode) {
+    private void setupAdd(boolean actionMode) {
         if (actionMode) {
             queue_add.setImageResource(R.drawable.ic_delete);
             queue_camera.hide();
@@ -114,21 +125,28 @@ public class QueueFragment extends Fragment implements ActionListener {
         } else {
             queue_add.setImageResource(R.drawable.ic_add);
         }
-
     }
 
+    private void setupTexts() {
+        queue_nothing_drawn.setVisibility(View.VISIBLE);
+    }
+
+    @SuppressWarnings("ConstantConditions")
     private void capture() {
-        if (!checkPermission()) {
-            askPermission();
+        if (!checkPermissionCamera()) {
+            askPermissionCamera();
             return;
         }
-
-        Intent ext_photo_intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        Intent chooserIntent = Intent.createChooser(ext_photo_intent, "Take a picture");
-        startActivityForResult(chooserIntent, REQUEST_IMAGE_CAPTURE);
+        camera_handler = new CameraHandler(getContext());
+        camera_handler.capture(this);
     }
 
     private void gallery() {
+        if (!checkPermissionGallery()) {
+            askPermissionGallery();
+            return;
+        }
+
         Intent intent=new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
 //        String[] mimeTypes = {"image/jpeg", "image/png"};
@@ -138,12 +156,21 @@ public class QueueFragment extends Fragment implements ActionListener {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private boolean checkPermission() {
+    private boolean checkPermissionCamera() {
         return ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void askPermission() {
+    private void askPermissionCamera() {
         requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private boolean checkPermissionGallery() {
+        return ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void askPermissionGallery() {
+        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_GALLERY_PERMISSION);
     }
 
     @Override
@@ -151,25 +178,23 @@ public class QueueFragment extends Fragment implements ActionListener {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
-                case REQUEST_IMAGE_CAPTURE:
-                    if (data.hasExtra("data")) {
-                        Log.e("QUEUE", "Received photo");
-                        //TODO: Get full image?
-                        // https://stackoverflow.com/questions/6448856/android-camera-intent-how-to-get-full-sized-photo
-                        //TODO: Landscape?
-                        // https://stackoverflow.com/questions/6813166/set-orientation-of-android-camera-started-with-intent-action-image-capture
-                        Bitmap photo = (Bitmap) data.getExtras().get("data");
-                        Image image = new Image(photo);
-                        model.addToQueue(image);
-                    }
+                case CameraHandler.REQUEST_CAPTURE:
+                    Log.e("QUEUE", "Received photo");
+                    camera_handler.addPictureToGallery();
+                    //TODO: Landscape?
+                    // https://stackoverflow.com/questions/6813166/set-orientation-of-android-camera-started-with-intent-action-image-capture
+                    model.addToQueue(new Image(camera_handler.getFilepath()));
+
                     break;
                 case REQUEST_IMAGE_GALLERY:
                     Uri uri = data.getData();
                     try {
                         Log.e("QUEUE", "Received gallery");
                         //TODO: Maybe should ask permission for external storage reads
-                        Bitmap photo = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
-                        Image image = new Image(photo);
+
+//                        Bitmap photo = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
+//                        Image image = new Image(photo);
+                        Image image = new Image(getPath(getContext(), uri));
                         model.addToQueue(image);
                     } catch (Exception ignored) {
                         Snackbar.make(getView(), "Error retrieving file", Snackbar.LENGTH_LONG).show();
@@ -181,14 +206,39 @@ public class QueueFragment extends Fragment implements ActionListener {
         }
     }
 
+    private static String getPath(Context context, Uri uri ) {
+        String result = null;
+        String[] proj = { MediaStore.Images.Media.DATA };
+        Cursor cursor = context.getContentResolver( ).query( uri, proj, null, null, null );
+        if(cursor != null){
+            if ( cursor.moveToFirst( ) ) {
+                int column_index = cursor.getColumnIndexOrThrow( proj[0] );
+                result = cursor.getString( column_index );
+            }
+            cursor.close( );
+        }
+        if(result == null) {
+            result = "Not found";
+        }
+        return result;
+    }
+
     @Override
     @SuppressWarnings("ConstantConditions")
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults[0] == PackageManager.PERMISSION_DENIED)
-                Snackbar.make(getView(), "Cannot open camera without permissions", Snackbar.LENGTH_LONG).show();
-            else
-                capture();
+        switch(requestCode) {
+            case REQUEST_CAMERA_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_DENIED)
+                    Snackbar.make(getView(), "Cannot open camera without permissions", Snackbar.LENGTH_LONG).show();
+                else
+                    capture();
+                break;
+            case REQUEST_GALLERY_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_DENIED)
+                    Snackbar.make(getView(), "Cannot open gallery without permissions", Snackbar.LENGTH_LONG).show();
+                else
+                    gallery();
+                break;
         }
     }
 
@@ -208,6 +258,6 @@ public class QueueFragment extends Fragment implements ActionListener {
     @Override
     public void onActionModeChange(boolean actionMode) {
         Log.e("Actionmode", "Actionmode changed to: "+actionMode);
-        setupAdd(getView(), actionMode);
+        setupAdd(actionMode);
     }
 }

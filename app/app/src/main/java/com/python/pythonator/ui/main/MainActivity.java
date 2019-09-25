@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,9 +35,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     private TabLayout tab_layout;
     private MenuItem bluetooth_search;
 
+    private BluetoothServer server;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        server = BluetoothServer.getServer(getApplicationContext());
         setContentView(R.layout.activity_main);
         findGlobalViews();
         setupActionBar();
@@ -44,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
         if (!checkPermission())
             askPermission();
-        BluetoothServer.getServer(getApplicationContext()).activate(this);
+        server.activate(this);
     }
 
     private void findGlobalViews() {
@@ -90,6 +94,11 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 startActivity(intent);
                 break;
             case R.id.main_menu_bluetooth:
+                if (!server.isConnected()) {
+                    Log.e("Retry", "Retrying to establish server connection");
+                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                    server.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                }
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -112,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 s.show();
             } else {
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                BluetoothServer.getServer(getApplicationContext()).connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                server.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
             }
         }
     }
