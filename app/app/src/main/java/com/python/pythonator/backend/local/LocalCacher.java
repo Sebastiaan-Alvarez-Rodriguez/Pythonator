@@ -3,21 +3,14 @@ package com.python.pythonator.backend.local;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
-import android.os.Environment;
 import android.util.Log;
-
-import androidx.annotation.Nullable;
 
 import com.python.pythonator.structures.Image;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.Executors;
 
 public class LocalCacher {

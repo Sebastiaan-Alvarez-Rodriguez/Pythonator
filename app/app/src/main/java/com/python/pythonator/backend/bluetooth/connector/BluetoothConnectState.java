@@ -6,5 +6,5 @@ public enum BluetoothConnectState {
     NO_BLUETOOTH,
     NO_LOCATION,
     NOT_FOUND,
-    FAILED
+    NOT_CONNECTED
 }

@@ -8,22 +8,23 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.python.pythonator.backend.bluetooth.broadcast.BroadcastHandler;
-import com.python.pythonator.backend.bluetooth.broadcast.BroadcastResultInterface;
+import com.python.pythonator.backend.bluetooth.broadcast.discovery.DiscoveryBroadcastHandler;
+import com.python.pythonator.backend.bluetooth.broadcast.discovery.BroadcastDiscoveryResultInterface;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 
-public class BluetoothConnector implements BroadcastResultInterface {
+public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
 
     private BluetoothAdapter adapter;
-    private BroadcastHandler broadcast_handler;
+    private DiscoveryBroadcastHandler broadcast_handler;
+    private final Context application_context;
 
     private volatile boolean is_searching;
-
     private volatile String server_name;
+
     private BluetoothConnectorInterface connector_interface;
 
     //For board, use well known: 00001101-0000-1000-8000-00805F9B34FB?
@@ -31,7 +32,7 @@ public class BluetoothConnector implements BroadcastResultInterface {
 
     public BluetoothConnector(BluetoothAdapter adapter, Context application_context) {
         this.adapter = adapter;
-        this.broadcast_handler = new BroadcastHandler(application_context);
+        this.application_context = application_context;
         is_searching = false;
     }
 
@@ -44,6 +45,7 @@ public class BluetoothConnector implements BroadcastResultInterface {
         Log.e("Connector", "Name: "+name+". MAC: "+address);
         if (name.equals(server_name)) {
             stop_search();
+            broadcast_handler.stopBroadcast();
             BluetoothSocket bluetooth_socket;
             try {
                  bluetooth_socket = device.createRfcommSocketToServiceRecord(uuid);
@@ -64,7 +66,7 @@ public class BluetoothConnector implements BroadcastResultInterface {
                     connector_interface.onConnectResult(BluetoothConnectState.CONNECTED, bluetooth_socket);
                 } catch (Exception second) {
                     Log.e("Connector", "Reflection hack failed!");
-                    connector_interface.onConnectResult(BluetoothConnectState.FAILED, null);
+                    connector_interface.onConnectResult(BluetoothConnectState.NOT_CONNECTED, null);
                 }
             }
         }
@@ -89,8 +91,8 @@ public class BluetoothConnector implements BroadcastResultInterface {
         this.server_name = server_name;
         this.connector_interface = connector_interface;
         is_searching = true;
-
-        Executors.newSingleThreadExecutor().execute(() -> broadcast_handler.startBroadcast(this));
+        broadcast_handler = new DiscoveryBroadcastHandler(application_context, this);
+        Executors.newSingleThreadExecutor().execute(() -> broadcast_handler.startBroadcast());
         if (adapter.isDiscovering())
             adapter.cancelDiscovery();
         adapter.startDiscovery();
@@ -100,7 +102,6 @@ public class BluetoothConnector implements BroadcastResultInterface {
         if (is_searching) {
             if (adapter.isDiscovering())
                 adapter.cancelDiscovery();
-            broadcast_handler.stopBroadcast();
             is_searching = false;
         }
     }

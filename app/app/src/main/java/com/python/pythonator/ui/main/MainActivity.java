@@ -21,7 +21,7 @@ import androidx.viewpager.widget.ViewPager;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.python.pythonator.R;
-import com.python.pythonator.backend.bluetooth.BluetoothServer;
+import com.python.pythonator.backend.bluetooth.BluetoothClient;
 import com.python.pythonator.backend.bluetooth.ConnectListener;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.ui.main.view.SectionsPagerAdapter;
@@ -31,24 +31,26 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     private static final int REQUEST_BLUETOOTH_PERMISSION = 1;
 
     private View view;
+    private Snackbar snackbar;
+
     private ViewPager view_pager;
     private TabLayout tab_layout;
     private MenuItem bluetooth_search;
 
-    private BluetoothServer server;
+    private BluetoothClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        server = BluetoothServer.getServer(getApplicationContext());
+        client = BluetoothClient.getClient(getApplicationContext());
         setContentView(R.layout.activity_main);
         findGlobalViews();
         setupActionBar();
         setupViewPager();
-
+        setupSnackBar();
         if (!checkPermission())
             askPermission();
-        server.activate(this);
+        client.activateBluetooth(this);
     }
 
     private void findGlobalViews() {
@@ -73,6 +75,11 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
             actionbar.setTitle("Pythonator");
     }
 
+    private void setupSnackBar() {
+        snackbar = Snackbar.make(view, "Bluetooth is required to communicate with the client", Snackbar.LENGTH_INDEFINITE);
+        snackbar.setAction("Try again", v -> client.activateBluetooth(this));
+    }
+
     private boolean checkPermission() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
@@ -94,10 +101,15 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 startActivity(intent);
                 break;
             case R.id.main_menu_bluetooth:
-                if (!server.isConnected()) {
-                    Log.e("Retry", "Retrying to establish server connection");
-                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                    server.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                if (!client.isConnected()) {
+                    if (!client.isBluetoothEnabled()) {
+                        client.activateBluetooth(this);
+                        snackbar.dismiss();
+                    } else {
+                        Log.e("Retry", "Retrying to establish client connection");
+                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+                        client.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                    }
                 }
                 break;
         }
@@ -114,20 +126,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == BluetoothServer.REQUEST_ENABLE_BLUETOOTH) {
+        if (requestCode == BluetoothClient.REQUEST_ENABLE_BLUETOOTH) {
             if (resultCode != RESULT_OK) {
-                Snackbar s = Snackbar.make(view, "Bluetooth is required to communicate with the server", Snackbar.LENGTH_INDEFINITE);
-                s.setAction("Try again", v -> BluetoothServer.getServer(getApplicationContext()).activate(this));
-                s.show();
+                snackbar.show();
             } else {
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                server.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                client.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
             }
         }
     }
 
     @Override
     public void onChangeState(BluetoothConnectState state) {
+        if (bluetooth_search == null)
+            return;
         switch (state) {
             case PENDING:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
@@ -141,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
             case NO_LOCATION:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_location_disabled));
             case NO_BLUETOOTH:
-            case FAILED:
+            case NOT_CONNECTED:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
                 break;
         }

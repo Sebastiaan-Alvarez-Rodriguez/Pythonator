@@ -3,9 +3,11 @@ package com.python.pythonator.ui.camera;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
@@ -14,7 +16,6 @@ import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -57,8 +58,6 @@ public class CameraHandler {
     private @Nullable Intent createCaptureIntent() {
         Intent ext_photo_intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo_file = createImageFile();
-        if (photo_file == null)
-            return null;
         Uri photoURI = FileProvider.getUriForFile(context,"com.python.pythonator.fileprovider", photo_file);
         ext_photo_intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
 
@@ -66,18 +65,18 @@ public class CameraHandler {
     }
 
     @CheckResult
-    private @Nullable File createImageFile() {
+    private @NonNull File createImageFile() {
         String time_stamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String image_file_name = "JPEG_" + time_stamp + "_";
-        File storage_dir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        try {
-            File file = File.createTempFile(image_file_name,".jpg", storage_dir);
-            filepath = file.getAbsolutePath();
-            return file;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        File storage_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File app_dir = new File(storage_dir, "Pythonator");
+        boolean created = app_dir.mkdirs();
+
+        Log.e("CAMHANDLE", "Created subdir: "+created);
+        File file = new File(app_dir, image_file_name+".jpg");
+        MediaScannerConnection.scanFile(context, new String[] {file.getAbsolutePath()}, null, null);
+        filepath = file.getAbsolutePath();
+        return file;
     }
 
     public void addPictureToGallery() {

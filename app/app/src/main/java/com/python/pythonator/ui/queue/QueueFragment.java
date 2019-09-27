@@ -157,11 +157,16 @@ public class QueueFragment extends Fragment implements ActionListener {
 
     @SuppressWarnings("ConstantConditions")
     private boolean checkPermissionCamera() {
-        return ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void askPermissionCamera() {
-        requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        requestPermissions(new String[]{Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        }, REQUEST_CAMERA_PERMISSION);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -170,7 +175,8 @@ public class QueueFragment extends Fragment implements ActionListener {
     }
 
     private void askPermissionGallery() {
-        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_GALLERY_PERMISSION);
+        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                REQUEST_GALLERY_PERMISSION);
     }
 
     @Override
@@ -228,8 +234,9 @@ public class QueueFragment extends Fragment implements ActionListener {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
             case REQUEST_CAMERA_PERMISSION:
-                if (grantResults[0] == PackageManager.PERMISSION_DENIED)
-                    Snackbar.make(getView(), "Cannot open camera without permissions", Snackbar.LENGTH_LONG).show();
+                if (grantResults[0] == PackageManager.PERMISSION_DENIED || grantResults[1] == PackageManager.PERMISSION_DENIED
+                        || grantResults[2] == PackageManager.PERMISSION_DENIED)
+                    Snackbar.make(getView(), "Cannot open camera and store picture without permissions", Snackbar.LENGTH_LONG).show();
                 else
                     capture();
                 break;

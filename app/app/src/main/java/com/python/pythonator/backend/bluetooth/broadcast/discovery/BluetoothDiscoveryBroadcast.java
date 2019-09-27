@@ -1,4 +1,4 @@
-package com.python.pythonator.backend.bluetooth.broadcast;
+package com.python.pythonator.backend.bluetooth.broadcast.discovery;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -7,11 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-public class BluetoothBroadcast extends BroadcastReceiver {
-    private BroadcastResultInterface result_interface;
+public class BluetoothDiscoveryBroadcast extends BroadcastReceiver {
+    private BroadcastDiscoveryResultInterface result_interface;
     private int found;
 
-    public BluetoothBroadcast(BroadcastResultInterface result_interface) {
+    public BluetoothDiscoveryBroadcast(BroadcastDiscoveryResultInterface result_interface) {
         this.result_interface = result_interface;
         found = 0;
     }

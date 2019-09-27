@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.python.pythonator.backend.bluetooth.BluetoothServer;
+import com.python.pythonator.backend.bluetooth.BluetoothClient;
 import com.python.pythonator.structures.Image;
 
 import java.util.ArrayList;
@@ -19,12 +19,12 @@ import java.util.concurrent.Executors;
 public class QueueRepository {
 
     private MutableLiveData<List<Image>> local_queue, server_queue;
-    private BluetoothServer server;
+    private BluetoothClient server;
 
     public QueueRepository(Context application_context) {
         local_queue = new MutableLiveData<>();
         server_queue = new MutableLiveData<>();
-        server = BluetoothServer.getServer(application_context);
+        server = BluetoothClient.getClient(application_context);
     }
 
     public LiveData<List<Image>> getLocalQueue() {

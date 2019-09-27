@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnector;
+import com.python.pythonator.backend.bluetooth.connector.state.BluetoothStateWatcher;
 import com.python.pythonator.structures.Image;
 
 import java.io.DataOutputStream;
@@ -27,14 +28,14 @@ import java.util.concurrent.Executors;
 
 //On UUIDs:
 // https://stackoverflow.com/questions/13964342/android-how-do-bluetooth-uuids-work
-public class BluetoothServer {
-    private static volatile BluetoothServer INSTANCE;
+public class BluetoothClient {
+    private static volatile BluetoothClient INSTANCE;
 
-    public static BluetoothServer getServer(Context application_context) {
+    public static BluetoothClient getClient(Context application_context) {
         if (INSTANCE == null) {
-            synchronized (BluetoothServer.class) {
+            synchronized (BluetoothClient.class) {
                 if (INSTANCE == null)
-                    INSTANCE = new BluetoothServer(application_context);
+                    INSTANCE = new BluetoothClient(application_context);
             }
         }
         return INSTANCE;
@@ -42,16 +43,19 @@ public class BluetoothServer {
 
     public static final int REQUEST_ENABLE_BLUETOOTH = 400;
 
+    //Bluetooth primitives
     private BluetoothAdapter bluetooth_adapter;
-    private BluetoothConnector bluetooth_connector;
     private BluetoothSocket bluetooth_socket;
 
-    private BluetoothServer(Context application_context) {
-        bluetooth_adapter = BluetoothAdapter.getDefaultAdapter();
-        bluetooth_connector = new BluetoothConnector(bluetooth_adapter, application_context);
-        bluetooth_socket = null;
-    }
+    private BluetoothConnector bluetooth_connector;
+    private BluetoothStateWatcher bluetooth_state_watcher;
 
+    private BluetoothClient(Context application_context) {
+        bluetooth_adapter = BluetoothAdapter.getDefaultAdapter();
+        bluetooth_socket = null;
+        bluetooth_connector = new BluetoothConnector(bluetooth_adapter, application_context);
+        bluetooth_state_watcher = null;
+    }
 
     /**
      * Sends Intent request to enable bluetooth, with request code
@@ -59,7 +63,7 @@ public class BluetoothServer {
      * @param activity The activity to
      */
     @MainThread
-    public void activate(@NonNull Activity activity) {
+    public void activateBluetooth(@NonNull Activity activity) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
     }
@@ -70,9 +74,12 @@ public class BluetoothServer {
      * @param connection_listener the interface which gets called with possible outcomes
      */
     public void connect(@NonNull String server_name, @NonNull ConnectListener connection_listener) {
+        if (bluetooth_state_watcher != null)
+            bluetooth_state_watcher.stop();
         connection_listener.onChangeState(BluetoothConnectState.PENDING);
         bluetooth_connector.search(server_name, (state, socket) -> {
-            connection_listener.onChangeState(state);
+            bluetooth_state_watcher = new BluetoothStateWatcher(this, state == BluetoothConnectState.CONNECTED, connection_listener);
+            bluetooth_state_watcher.setState(state);
             bluetooth_socket = socket;
         });
     }
@@ -90,6 +97,14 @@ public class BluetoothServer {
     }
 
     /**
+     * @return whether bluetooth is enabled or not
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean isBluetoothEnabled() {
+        return bluetooth_adapter.isEnabled();
+    }
+
+    /**
      * @return whether there is an active connection or not
      */
     public boolean isConnected() {
@@ -97,7 +112,7 @@ public class BluetoothServer {
     }
 
     public void sendImage(@NonNull Image image, @NonNull SendListener listener) {
-        if (bluetooth_socket != null && bluetooth_socket.isConnected()) {
+        if (isConnected()) {
             Executors.newSingleThreadExecutor().execute(() -> {
                 if (bluetooth_socket.isConnected()) {
                     try {

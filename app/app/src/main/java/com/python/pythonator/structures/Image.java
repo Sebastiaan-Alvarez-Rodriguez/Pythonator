@@ -2,8 +2,6 @@ package com.python.pythonator.structures;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
@@ -12,7 +10,6 @@ import androidx.annotation.WorkerThread;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URI;
 
 public class Image {
     private String abs_path;
