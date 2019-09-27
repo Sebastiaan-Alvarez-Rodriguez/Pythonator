@@ -17,7 +17,8 @@ add_global_arguments(
         '-ffunction-sections',
         '-fdata-sections',
         '-Wall',
-        '-Wextra'
+        '-Wextra',
+        '-DBAUD_TOL=3' # Silence warnings about baud rates
     ],
     language: 'c'
 )
@@ -33,7 +34,8 @@ add_global_link_arguments(
 )
 
 sources = [
-    'src/main.c'
+    'src/main.c',
+    'src/serial.c'
 ]
 
 pythonator_exe = executable(

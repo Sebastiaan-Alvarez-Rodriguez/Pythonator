@@ -4,6 +4,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "pins.h"
+#include "serial.h"
 
 // X 1475 * 4 steps
 // Y 1500 * 4+ steps
@@ -123,35 +124,46 @@ int main() {
     PEN_DDR |= PEN_BIT;
     pen_enable(false);
 
-    struct stepper_state state = {0, 0};
-
-    const int n = 200;
-    const int r = 200;
-
-    stepper_line_to(&state, 1500 + r, 1500);
-
-    double t = 2.0 * M_PI / n;
-
-    pen_enable(true);
-
-    for (int i = 0; i <= n; ++i) {
-        unsigned x = (unsigned)(cos(t * i * 3) * r + 1500);
-        unsigned y = (unsigned)(sin(t * i * 2) * r + 1500);
-
-        stepper_line_to(&state, x, y);
-    }
-
-    pen_enable(false);
-    stepper_line_to(&state, 0, 0);
-
-    STEPPER_DISABLE_PORT |= STEPPER_DISABLE_BIT;
+    serial_init();
 
     while (true) {
+        char c = serial_getchar();
+        serial_putchar(c);
         LED_PORT |= LED_BIT;
-        _delay_ms(1000);
+        _delay_ms(100);
         LED_PORT &= ~LED_BIT;
-        _delay_ms(1000);
+        _delay_ms(100);
     }
+
+    // struct stepper_state state = {0, 0};
+
+    // const int n = 200;
+    // const int r = 200;
+
+    // stepper_line_to(&state, 1500 + r, 1500);
+
+    // double t = 2.0 * M_PI / n;
+
+    // pen_enable(true);
+
+    // for (int i = 0; i <= n; ++i) {
+    //     unsigned x = (unsigned)(cos(t * i * 3) * r + 1500);
+    //     unsigned y = (unsigned)(sin(t * i * 2) * r + 1500);
+
+    //     stepper_line_to(&state, x, y);
+    // }
+
+    // pen_enable(false);
+    // stepper_line_to(&state, 0, 0);
+
+    // STEPPER_DISABLE_PORT |= STEPPER_DISABLE_BIT;
+
+    // while (true) {
+    //     LED_PORT |= LED_BIT;
+    //     _delay_ms(1000);
+    //     LED_PORT &= ~LED_BIT;
+    //     _delay_ms(1000);
+    // }
 
     return 0;
 }
