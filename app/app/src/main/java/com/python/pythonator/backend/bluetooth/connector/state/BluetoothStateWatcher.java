@@ -1,47 +1,52 @@
 package com.python.pythonator.backend.bluetooth.connector.state;
 
+import android.content.Context;
 import android.util.Log;
 
-import com.python.pythonator.backend.bluetooth.BluetoothClient;
+import androidx.annotation.NonNull;
+
 import com.python.pythonator.backend.bluetooth.ConnectListener;
+import com.python.pythonator.backend.bluetooth.broadcast.state.StateBroadcastHandler;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class BluetoothStateWatcher {
-    private BluetoothClient client;
-    private ScheduledExecutorService service;
-    private boolean initial_success;
-    private ConnectListener connect_listener;
+    private StateBroadcastHandler state_handler;
 
-    public BluetoothStateWatcher(BluetoothClient client, boolean initial_success, ConnectListener connect_listener) {
-        this.client = client;
-        this.initial_success = initial_success;
-        this.connect_listener = connect_listener;
+    private volatile BluetoothConnectState state;
+    private Context application_context;
 
-        service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleAtFixedRate(this::watch, 5, 5, TimeUnit.SECONDS);
+    public BluetoothStateWatcher(@NonNull Context application_context) {
+        this.state = BluetoothConnectState.NOT_CONNECTED;
+        this.state_handler = null;
+        this.application_context = application_context;
     }
 
-    public synchronized void setState(BluetoothConnectState new_state) {
-        connect_listener.onChangeState(new_state);
-        Log.e("StateWatcher", "New state: "+new_state.name());
+    public void watch(@NonNull ConnectListener connect_listener) {
+        if (state_handler != null)
+            stop();
+        this.state_handler = new StateBroadcastHandler(application_context, new_state -> {
+            if (new_state == BluetoothConnectState.NOT_CONNECTED) {
+                state = new_state;
+                connect_listener.onChangeState(new_state);
+                Log.e("StateWatcher", "New state: " + new_state.name());
+                stop();
+            }
+        });
+
+        Executors.newSingleThreadExecutor().execute(() -> state_handler.startBroadcast());
     }
 
-    private void watch() {
-        if (initial_success) {
-            if (!client.isBluetoothEnabled())
-                setState(BluetoothConnectState.NO_BLUETOOTH);
-            else if (!client.isConnected())
-                setState(BluetoothConnectState.NOT_FOUND);
-            else
-                setState(BluetoothConnectState.CONNECTED);
-        }
+    public void setState(BluetoothConnectState state) {
+        this.state = state;
+    }
+    public BluetoothConnectState getState() {
+        return state;
     }
 
     public void stop() {
-        service.shutdown();
+        state_handler.stopBroadcast();
+        Log.e("StateWatcher", "Stopping state watcher");
     }
 }

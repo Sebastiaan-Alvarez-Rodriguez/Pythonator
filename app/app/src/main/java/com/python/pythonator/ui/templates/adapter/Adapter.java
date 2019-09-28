@@ -1,6 +1,5 @@
 package com.python.pythonator.ui.templates.adapter;
 
-import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.NonNull;

@@ -2,13 +2,10 @@ package com.python.pythonator.ui.queue;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +29,7 @@ import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.queue.model.QueueViewModel;
 import com.python.pythonator.ui.queue.view.QueueAdapter;
 import com.python.pythonator.ui.templates.adapter.ActionListener;
+import com.python.pythonator.util.UriUtil;
 
 public class QueueFragment extends Fragment implements ActionListener {
     private static final int
@@ -187,8 +185,6 @@ public class QueueFragment extends Fragment implements ActionListener {
                 case CameraHandler.REQUEST_CAPTURE:
                     Log.e("QUEUE", "Received photo");
                     camera_handler.addPictureToGallery();
-                    //TODO: Landscape?
-                    // https://stackoverflow.com/questions/6813166/set-orientation-of-android-camera-started-with-intent-action-image-capture
                     model.addToQueue(new Image(camera_handler.getFilepath()));
 
                     break;
@@ -196,11 +192,7 @@ public class QueueFragment extends Fragment implements ActionListener {
                     Uri uri = data.getData();
                     try {
                         Log.e("QUEUE", "Received gallery");
-                        //TODO: Maybe should ask permission for external storage reads
-
-//                        Bitmap photo = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
-//                        Image image = new Image(photo);
-                        Image image = new Image(getPath(getContext(), uri));
+                        Image image = new Image(UriUtil.getPath(getContext(), uri));
                         model.addToQueue(image);
                     } catch (Exception ignored) {
                         Snackbar.make(getView(), "Error retrieving file", Snackbar.LENGTH_LONG).show();
@@ -210,23 +202,6 @@ public class QueueFragment extends Fragment implements ActionListener {
         } else {
             Log.e("QUEUE", "Received canceled");
         }
-    }
-
-    private static String getPath(Context context, Uri uri ) {
-        String result = null;
-        String[] proj = { MediaStore.Images.Media.DATA };
-        Cursor cursor = context.getContentResolver( ).query( uri, proj, null, null, null );
-        if(cursor != null){
-            if ( cursor.moveToFirst( ) ) {
-                int column_index = cursor.getColumnIndexOrThrow( proj[0] );
-                result = cursor.getString( column_index );
-            }
-            cursor.close( );
-        }
-        if(result == null) {
-            result = "Not found";
-        }
-        return result;
     }
 
     @Override

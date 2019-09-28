@@ -8,8 +8,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.python.pythonator.backend.bluetooth.broadcast.discovery.DiscoveryBroadcastHandler;
 import com.python.pythonator.backend.bluetooth.broadcast.discovery.BroadcastDiscoveryResultInterface;
+import com.python.pythonator.backend.bluetooth.broadcast.discovery.DiscoveryBroadcastHandler;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

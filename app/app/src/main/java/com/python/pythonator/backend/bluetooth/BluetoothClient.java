@@ -54,7 +54,7 @@ public class BluetoothClient {
         bluetooth_adapter = BluetoothAdapter.getDefaultAdapter();
         bluetooth_socket = null;
         bluetooth_connector = new BluetoothConnector(bluetooth_adapter, application_context);
-        bluetooth_state_watcher = null;
+        bluetooth_state_watcher = new BluetoothStateWatcher(application_context);
     }
 
     /**
@@ -74,12 +74,11 @@ public class BluetoothClient {
      * @param connection_listener the interface which gets called with possible outcomes
      */
     public void connect(@NonNull String server_name, @NonNull ConnectListener connection_listener) {
-        if (bluetooth_state_watcher != null)
-            bluetooth_state_watcher.stop();
-        connection_listener.onChangeState(BluetoothConnectState.PENDING);
+        bluetooth_state_watcher.setState(BluetoothConnectState.PENDING);
+        bluetooth_state_watcher.watch(connection_listener);
         bluetooth_connector.search(server_name, (state, socket) -> {
-            bluetooth_state_watcher = new BluetoothStateWatcher(this, state == BluetoothConnectState.CONNECTED, connection_listener);
-            bluetooth_state_watcher.setState(state);
+            if (state == BluetoothConnectState.CONNECTED)
+
             bluetooth_socket = socket;
         });
     }
@@ -99,7 +98,6 @@ public class BluetoothClient {
     /**
      * @return whether bluetooth is enabled or not
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isBluetoothEnabled() {
         return bluetooth_adapter.isEnabled();
     }
@@ -108,27 +106,25 @@ public class BluetoothClient {
      * @return whether there is an active connection or not
      */
     public boolean isConnected() {
-        return bluetooth_adapter.isEnabled() && bluetooth_socket != null && bluetooth_socket.isConnected();
+        return bluetooth_state_watcher.getState() == BluetoothConnectState.CONNECTED;
     }
 
     public void sendImage(@NonNull Image image, @NonNull SendListener listener) {
         if (isConnected()) {
             Executors.newSingleThreadExecutor().execute(() -> {
-                if (bluetooth_socket.isConnected()) {
-                    try {
-                        DataOutputStream out = new DataOutputStream(bluetooth_socket.getOutputStream());
-                        out.writeLong((long)image.getBitmapBytes().length);
-                        out.write(image.getBitmapBytes());
-                    } catch (Exception ignored){}
+                try {
+                    DataOutputStream out = new DataOutputStream(bluetooth_socket.getOutputStream());
+                    out.writeLong((long)image.getBitmapBytes().length);
+                    out.write(image.getBitmapBytes());
+                } catch (Exception ignored){}
 
-                    try {
-                        InputStream in = bluetooth_socket.getInputStream();
-                        int result = in.read();
-                        listener.onResult(result == 0);
-                        if (result == -1)
-                            disconnect();
-                    } catch (Exception ignored){}
-                }
+                try {
+                    InputStream in = bluetooth_socket.getInputStream();
+                    int result = in.read();
+                    listener.onResult(result == 0);
+                    if (result == -1)
+                        disconnect();
+                } catch (Exception ignored){}
             });
         }
     }
