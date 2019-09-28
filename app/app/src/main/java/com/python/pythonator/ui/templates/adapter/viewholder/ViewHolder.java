@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.templates.adapter;
+package com.python.pythonator.ui.templates.adapter.viewholder;
 
 
 
@@ -6,6 +6,8 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
 
 public abstract class ViewHolder<T> extends RecyclerView.ViewHolder {
     protected ClickListener clickListener;

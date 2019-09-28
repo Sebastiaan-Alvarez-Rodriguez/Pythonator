@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.templates.adapter;
+package com.python.pythonator.ui.templates.adapter.listener;
 
 import android.view.View;
 

@@ -64,7 +64,7 @@ public class QueueRepository {
         });
     }
 
-    public void addToServerQueue(@NonNull Image image) {
+    private void addToServerQueue(@NonNull Image image) {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             List<Image> list = server_queue.getValue();

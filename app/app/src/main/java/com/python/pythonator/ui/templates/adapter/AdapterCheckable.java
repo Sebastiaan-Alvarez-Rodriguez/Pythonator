@@ -6,6 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.python.pythonator.R;
+import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
 import java.util.HashSet;
 import java.util.List;

@@ -5,19 +5,25 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.listener.DragListener;
+import com.python.pythonator.ui.templates.adapter.touch.TouchCallback;
+import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 import com.python.pythonator.util.ListUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
  */
-public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, ClickListener {
+public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, ClickListener, DragListener {
 
     protected List<T> list = new ArrayList<>();
     protected ClickListener clickListener;
@@ -117,6 +123,32 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
         if (clickListener != null)
             return clickListener.onLongClick(view, pos);
         return false;
+    }
+
+    @Override
+    public void onItemMove(int fromPosition, int toPosition) {
+        if (fromPosition < toPosition) {
+            for (int i = fromPosition; i < toPosition; i++) {
+                Collections.swap(list, i, i + 1);
+            }
+        } else {
+            for (int i = fromPosition; i > toPosition; i--) {
+                Collections.swap(list, i, i - 1);
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(new TouchCallback(this));
+        touchHelper.attachToRecyclerView(recyclerView);
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        //TODO: forward to activity/fragment
     }
 
     /**

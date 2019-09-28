@@ -28,7 +28,7 @@ import com.python.pythonator.structures.Image;
 import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.queue.model.QueueViewModel;
 import com.python.pythonator.ui.queue.view.QueueAdapter;
-import com.python.pythonator.ui.templates.adapter.ActionListener;
+import com.python.pythonator.ui.templates.adapter.listener.ActionListener;
 import com.python.pythonator.util.UriUtil;
 
 public class QueueFragment extends Fragment implements ActionListener {

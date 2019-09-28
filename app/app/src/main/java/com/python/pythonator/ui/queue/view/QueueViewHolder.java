@@ -10,8 +10,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.python.pythonator.R;
 import com.python.pythonator.structures.Image;
-import com.python.pythonator.ui.templates.adapter.ClickListener;
-import com.python.pythonator.ui.templates.adapter.ViewHolder;
+import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
 public class QueueViewHolder extends ViewHolder<Image> {
     public static @LayoutRes final int layout_resource = R.layout.item_image;
