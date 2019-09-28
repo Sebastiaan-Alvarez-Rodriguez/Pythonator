@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.queue.model;
+package com.python.pythonator.ui.main;
 
 import android.app.Application;
 
@@ -12,11 +12,11 @@ import com.python.pythonator.structures.Image;
 import java.util.Collection;
 import java.util.List;
 
-public class QueueViewModel extends AndroidViewModel {
+public class MainViewModel extends AndroidViewModel {
     private LiveData<List<Image>> cache = null;
     private QueueRepository repository;
 
-    public QueueViewModel(@NonNull Application application) {
+    public MainViewModel(@NonNull Application application) {
         super(application);
         repository = new QueueRepository(application.getApplicationContext());
     }

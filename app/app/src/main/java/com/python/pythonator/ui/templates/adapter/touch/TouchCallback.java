@@ -7,10 +7,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 
 public class TouchCallback extends ItemTouchHelper.Callback {
-    private final DragListener mAdapter;
+    private final DragListener adapter;
 
     public TouchCallback(DragListener adapter) {
-        mAdapter = adapter;
+        this.adapter = adapter;
     }
 
     @Override
@@ -32,12 +32,12 @@ public class TouchCallback extends ItemTouchHelper.Callback {
 
     @Override
     public boolean onMove(@NonNull RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-        mAdapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+        adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
         return true;
     }
 
     @Override
     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-        mAdapter.onItemDismiss(viewHolder.getAdapterPosition());
+        adapter.onItemDismiss(viewHolder.getAdapterPosition());
     }
 }

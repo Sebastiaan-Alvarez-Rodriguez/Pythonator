@@ -1,4 +1,4 @@
-package com.python.pythonator.ui.queue.view;
+package com.python.pythonator.ui.queue;
 
 import android.view.LayoutInflater;
 import android.view.View;
