@@ -8,8 +8,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.python.pythonator.ui.templates.ResultCallback;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.Executors;
 
 public class Image {
     private String abs_path;
@@ -87,23 +90,25 @@ public class Image {
     }
 
     /**
-     * Returns a thumbnail of this image with resolution as close as possible to given resolution
+     * Returns a thumbnail of this image in callback, with resolution as close as possible to given resolution
      * @param requested_width Requested width for result image
      * @param requested_height Requested height for result image
+     * @param callback The callback to receive when an item is loaded
      * @return a bitmap thumbnail
      */
-    @CheckResult
-    public @NonNull Bitmap getThumbnail(int requested_width, int requested_height) {
-        // First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+    public void getThumbnail(int requested_width, int requested_height, ResultCallback<Bitmap> callback) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            // First decode with inJustDecodeBounds=true to check dimensions
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
 
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, requested_width, requested_height);
+            // Calculate inSampleSize
+            options.inSampleSize = calculateInSampleSize(options, requested_width, requested_height);
 
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(abs_path, options);
+            // Decode bitmap with inSampleSize set
+            options.inJustDecodeBounds = false;
+            callback.onResult(BitmapFactory.decodeFile(abs_path, options));
+        });
     }
 
     @CheckResult

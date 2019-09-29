@@ -8,19 +8,30 @@ import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 
 public class TouchCallback extends ItemTouchHelper.Callback {
     private final DragListener adapter;
+    private boolean allow_drag, allow_swipe;
 
     public TouchCallback(DragListener adapter) {
         this.adapter = adapter;
+        allow_drag = false;
+        allow_swipe = false;
     }
 
     @Override
     public boolean isLongPressDragEnabled() {
-        return true;
+        return allow_drag;
     }
 
     @Override
     public boolean isItemViewSwipeEnabled() {
-        return true;
+        return allow_swipe;
+    }
+
+    public void setAllowDrag(boolean allow) {
+        allow_drag = allow;
+    }
+
+    public void setAllowSwipe(boolean allow) {
+        allow_swipe = false;
     }
 
     @Override

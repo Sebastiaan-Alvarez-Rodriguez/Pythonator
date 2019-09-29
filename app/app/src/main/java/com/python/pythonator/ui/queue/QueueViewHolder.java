@@ -13,6 +13,8 @@ import com.python.pythonator.structures.Image;
 import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
+import java.util.concurrent.Executors;
+
 public class QueueViewHolder extends ViewHolder<Image> {
     public static @LayoutRes final int layout_resource = R.layout.item_image;
     private ImageView thumbnail_view;
@@ -46,7 +48,9 @@ public class QueueViewHolder extends ViewHolder<Image> {
 
     @Override
     public void set(Image image) {
-        thumbnail_view.setImageBitmap(image.getThumbnail(thumbnail_view.getWidth(), thumbnail_view.getHeight()));
+        image.getThumbnail(thumbnail_view.getWidth(), thumbnail_view.getHeight(), bitmap -> {
+            thumbnail_view.post(() -> thumbnail_view.setImageBitmap(bitmap));
+        });
         name_view.setText(image.getName());
         date_view.setText("Created " + image.getDate());
     }

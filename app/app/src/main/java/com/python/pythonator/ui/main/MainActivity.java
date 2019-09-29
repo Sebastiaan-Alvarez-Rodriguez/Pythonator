@@ -131,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             queue_add.setImageResource(R.drawable.ic_add);
         }
     }
+
     private void setupList() {
         adapter = new QueueAdapter(this);
         model.getQueue().observe(this, adapter);
@@ -218,6 +219,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 REQUEST_GALLERY_PERMISSION);
     }
 
+    //End of permissions
+
     @Override
     public void onChangeState(BluetoothConnectState state) {
         if (bluetooth_search == null)
@@ -248,6 +251,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 break;
+            case R.id.main_menu_sort:
+                if (adapter.isActionMode())
+                    adapter.deactivateActionMode();
+                adapter.toggleSort();
             case R.id.main_menu_bluetooth:
                 if (!client.isConnected()) {
                     if (!client.isBluetoothEnabled()) {

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 /**
  * Template to create an Adapter, which works with architecture LiveData
@@ -26,14 +27,18 @@ import java.util.List;
 public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, ClickListener, DragListener {
 
     protected List<T> list = new ArrayList<>();
-    protected ClickListener clickListener;
+    protected ClickListener click_listener;
+
+    protected TouchCallback touch_callback;
+    protected boolean sorting_enabled = false;
 
     /**
-     * Constructor which sets given clickListener to send callbacks to, if the listener is not null
+     * Constructor which sets given click_listener to send callbacks to, if the listener is not null
      * @param clickListener Listener to send callbacks in case of item clicks
      */
     public Adapter(@Nullable ClickListener clickListener) {
-        this.clickListener = clickListener;
+        click_listener = clickListener;
+        touch_callback = new TouchCallback(this);
     }
 
     /**
@@ -114,14 +119,14 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
 
     @Override
     public void onClick(View view, int pos) {
-        if (clickListener != null)
-            clickListener.onClick(view, pos);
+        if (click_listener != null)
+            click_listener.onClick(view, pos);
     }
 
     @Override
     public boolean onLongClick(View view, int pos) {
-        if (clickListener != null)
-            return clickListener.onLongClick(view, pos);
+        if (click_listener != null)
+            return click_listener.onLongClick(view, pos);
         return false;
     }
 
@@ -142,15 +147,20 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
     @Override
     public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
-        ItemTouchHelper touchHelper = new ItemTouchHelper(new TouchCallback(this));
-        touchHelper.attachToRecyclerView(recyclerView);
+        ItemTouchHelper helper = new ItemTouchHelper(touch_callback);
+        helper.attachToRecyclerView(recyclerView);
+
     }
 
     @Override
     public void onItemDismiss(int position) {
-        //TODO: forward to activity/fragment
     }
 
+    public void toggleSort() {
+        sorting_enabled = !sorting_enabled;
+        touch_callback.setAllowDrag(sorting_enabled);
+        touch_callback.setAllowSwipe(sorting_enabled);
+    }
     /**
      * Callback receiver for list changes.
      * @param newList the new List

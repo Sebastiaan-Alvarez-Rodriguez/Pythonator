@@ -23,6 +23,6 @@ public class QueueAdapter extends AdapterAction<Image> implements ClickListener 
     @Override
     public ViewHolder<Image> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(QueueViewHolder.layout_resource, parent,false);
-        return clickListener != null ? new QueueViewHolder(view, this) : new QueueViewHolder(view);
+        return click_listener != null ? new QueueViewHolder(view, this) : new QueueViewHolder(view);
     }
 }

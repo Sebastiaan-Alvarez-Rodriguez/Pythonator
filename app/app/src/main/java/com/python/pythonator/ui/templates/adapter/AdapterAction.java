@@ -43,10 +43,10 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
 
             if (actionMode && !hasSelected()) {
                 actionMode = false;
-                ((ActionListener) clickListener).onActionModeChange(false);
+                ((ActionListener) click_listener).onActionModeChange(false);
             }
         } else {
-            clickListener.onClick(view, pos);
+            click_listener.onClick(view, pos);
         }
     }
 
@@ -59,13 +59,13 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
     public boolean onLongClick(View view, int pos) {
         if (!actionMode) {
             actionMode = true;
-            ((ActionListener) clickListener).onActionModeChange(true);
+            ((ActionListener) click_listener).onActionModeChange(true);
         }
         boolean consumed =  super.onLongClick(view, pos);
 
         if (actionMode && !hasSelected()) {
             actionMode = false;
-            ((ActionListener) clickListener).onActionModeChange(false);
+            ((ActionListener) click_listener).onActionModeChange(false);
         }
         return consumed;
     }
@@ -79,7 +79,7 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
 
     public void deactivateActionMode() {
         actionMode = false;
-        ((ActionListener) clickListener).onActionModeChange(false);
+        ((ActionListener) click_listener).onActionModeChange(false);
         selected_items.clear();
     }
     /**
