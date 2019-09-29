@@ -20,4 +20,5 @@ The Pythonator is controlled by a host computer via a simple binary serial comma
     Returns:
     - `OK` if no error occured. The pen is at (x, y).
     - `Out of bounds` if (x, y) would be out of the reachable range. The pen's location remains unchanged.
+
 If any other command code was sent, `Unknown command` will be returned.
