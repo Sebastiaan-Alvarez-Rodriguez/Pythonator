@@ -35,7 +35,9 @@ add_global_link_arguments(
 
 sources = [
     'src/main.c',
-    'src/serial.c'
+    'src/serial.c',
+    'src/stepper.c',
+    'src/pen.c'
 ]
 
 pythonator_exe = executable(
