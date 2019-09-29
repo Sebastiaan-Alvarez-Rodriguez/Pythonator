@@ -28,3 +28,9 @@ char serial_getchar() {
     loop_until_bit_is_set(UCSR0A, RXC0);
     return UDR0;
 }
+
+uint16_t serial_get_u16le() {
+    uint8_t low = serial_getchar();
+    uint8_t high = serial_getchar();
+    return (high << 8) | low;
+}

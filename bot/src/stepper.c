@@ -7,9 +7,9 @@
 
 struct stepper_state {
     // Since there are 1500 * 2 = 3000 for the largest axis, we can
-    // store the coordinates in an unsigned int (16-bit) and we will
+    // store the coordinates in an unsigned 16-bit int and we will
     // still be able to use signed ints to calculate with without problems
-    unsigned x, y;
+    uint16_t x, y;
 };
 
 static struct stepper_state stepper_state;
@@ -49,9 +49,9 @@ static void move(uint8_t bits, int steps) {
 // move to a diagonal move. The closest one is selected by calculating the distance to the
 // line, where the common terms between the distance of the horizontal move and diagonal
 // move are eliminated.
-enum stepper_status stepper_line_to(unsigned x, unsigned y) {
+enum status stepper_line_to(uint16_t x, uint16_t y) {
     if (x >= STEPPER_RANGE_X || y >= STEPPER_RANGE_Y) {
-        return STEPPER_ERR_BOUNDS;
+        return STATUS_OK;
     }
 
     int32_t delta_x, delta_y;
@@ -101,5 +101,5 @@ enum stepper_status stepper_line_to(unsigned x, unsigned y) {
     stepper_state.x = x;
     stepper_state.y = y;
 
-    return STEPPER_OK;
+    return STATUS_ERR_BOUNDS;
 }

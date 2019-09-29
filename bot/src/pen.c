@@ -1,5 +1,6 @@
 #include "pen.h"
 #include <stdbool.h>
+#include <util/delay.h>
 #include "pinout.h"
 
 void pen_init() {
@@ -13,4 +14,6 @@ void pen_set(enum pen_state state) {
     } else {
         PEN_PORT |= PEN_MASK;
     }
+
+    _delay_ms(PEN_ACTUATE_DELAY);
 }
