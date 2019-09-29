@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.python.pythonator.R;
-import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
 import java.util.HashSet;
@@ -18,27 +18,27 @@ import java.util.Set;
  * Template specialization to allow items to be checked
  * @param <T> the type of items in the list
  */
-public abstract class AdapterCheckable<T> extends Adapter<T> implements ClickListener {
+public abstract class AdapterCheckable<T> extends Adapter<T> implements AdapterListener {
     protected Set<T> selected_items;
 
     /**
      * Constructor to set initially selected items and provide a listener to send click callbacks to
      * @param initialSelected List of initially selected items
-     * @param onClickListener Listener to send callbacks in case of item clicks
+     * @param onAdapterListener Listener to send callbacks in case of item clicks
      */
-    public AdapterCheckable(List<T> initialSelected, ClickListener onClickListener) {
-        super(onClickListener);
+    public AdapterCheckable(List<T> initialSelected, AdapterListener onAdapterListener) {
+        super(onAdapterListener);
         selected_items = initialSelected == null ? new HashSet<>() : new HashSet<>(initialSelected);
     }
 
     /**
-     * @see #AdapterCheckable(List, ClickListener)
+     * @see #AdapterCheckable(List, AdapterListener)
      * Same function, only takes away the need to call with second null argument
      */
     public AdapterCheckable(List<T> initialSelected) { this(initialSelected, null);}
 
     /**
-     * @see #AdapterCheckable(List, ClickListener)
+     * @see #AdapterCheckable(List, AdapterListener)
      * Same function, only takes away the need to call with 2 null arguments
      */
     public AdapterCheckable() { this(null, null); }

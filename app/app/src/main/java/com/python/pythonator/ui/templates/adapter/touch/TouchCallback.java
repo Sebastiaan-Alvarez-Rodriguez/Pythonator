@@ -31,7 +31,7 @@ public class TouchCallback extends ItemTouchHelper.Callback {
     }
 
     public void setAllowSwipe(boolean allow) {
-        allow_swipe = false;
+        allow_swipe = allow;
     }
 
     @Override

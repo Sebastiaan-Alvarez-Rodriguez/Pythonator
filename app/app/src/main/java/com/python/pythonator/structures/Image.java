@@ -16,18 +16,11 @@ import java.util.concurrent.Executors;
 
 public class Image {
     private String abs_path;
-    private String name, date;
 
     private Bitmap.CompressFormat format;
 
     public Image(@NonNull String abs_path) {
-        this(abs_path, "Untitled", "just now");
-    }
-
-    public Image(@NonNull String abs_path, @NonNull String name, @NonNull String date) {
         this.abs_path = abs_path;
-        this.name = name;
-        this.date = date;
 
         this.format = Bitmap.CompressFormat.PNG;
 //        rotateImage();
@@ -109,16 +102,6 @@ public class Image {
             options.inJustDecodeBounds = false;
             callback.onResult(BitmapFactory.decodeFile(abs_path, options));
         });
-    }
-
-    @CheckResult
-    public @NonNull String getName() {
-        return name;
-    }
-
-    @CheckResult
-    public @NonNull String getDate() {
-        return date;
     }
 
 //    /**

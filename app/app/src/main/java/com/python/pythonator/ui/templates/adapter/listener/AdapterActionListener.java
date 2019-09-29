@@ -1,5 +1,5 @@
 package com.python.pythonator.ui.templates.adapter.listener;
 
-public interface ActionListener extends ClickListener {
+public interface AdapterActionListener extends AdapterListener {
     void onActionModeChange(boolean isActionMode);
 }

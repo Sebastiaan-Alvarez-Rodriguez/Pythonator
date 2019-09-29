@@ -8,7 +8,7 @@ import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 import com.python.pythonator.ui.templates.adapter.touch.TouchCallback;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
@@ -18,35 +18,28 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 /**
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
  */
-public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, ClickListener, DragListener {
+public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, InternalClickListener, DragListener {
 
     protected List<T> list = new ArrayList<>();
-    protected ClickListener click_listener;
+    protected AdapterListener adapter_listener;
 
     protected TouchCallback touch_callback;
-    protected boolean sorting_enabled = false;
+    protected boolean sorting_enabled;
 
     /**
-     * Constructor which sets given click_listener to send callbacks to, if the listener is not null
-     * @param clickListener Listener to send callbacks in case of item clicks
+     * Constructor which sets given adapter_listener to send callbacks to, if the listener is not null
+     * @param adapterListener Listener to send callbacks in case of item clicks
      */
-    public Adapter(@Nullable ClickListener clickListener) {
-        click_listener = clickListener;
+    public Adapter(@Nullable AdapterListener adapterListener) {
+        adapter_listener = adapterListener;
         touch_callback = new TouchCallback(this);
-    }
-
-    /**
-     * @see #Adapter(ClickListener)
-     * Same function, but sets no listener
-     */
-    public Adapter() {
-        this(null);
+        sorting_enabled = false;
+        toggleSort();
     }
 
     /**
@@ -119,14 +112,14 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
 
     @Override
     public void onClick(View view, int pos) {
-        if (click_listener != null)
-            click_listener.onClick(view, pos);
+        if (adapter_listener != null)
+            adapter_listener.onClick(view, pos);
     }
 
     @Override
     public boolean onLongClick(View view, int pos) {
-        if (click_listener != null)
-            return click_listener.onLongClick(view, pos);
+        if (adapter_listener != null)
+            return adapter_listener.onLongClick(view, pos);
         return false;
     }
 
@@ -154,6 +147,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
 
     @Override
     public void onItemDismiss(int position) {
+        adapter_listener.onSwiped(position);
     }
 
     public void toggleSort() {

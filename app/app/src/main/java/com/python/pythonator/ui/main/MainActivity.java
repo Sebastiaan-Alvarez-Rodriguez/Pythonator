@@ -32,12 +32,14 @@ import com.python.pythonator.backend.bluetooth.ConnectListener;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.structures.Image;
 import com.python.pythonator.ui.camera.CameraHandler;
-import com.python.pythonator.ui.queue.QueueAdapter;
+import com.python.pythonator.ui.main.adapter.QueueAdapter;
 import com.python.pythonator.ui.settings.SettingsActivity;
-import com.python.pythonator.ui.templates.adapter.listener.ActionListener;
+import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.util.UriUtil;
 
-public class MainActivity extends AppCompatActivity implements ConnectListener, ActionListener {
+import java.util.Collections;
+
+public class MainActivity extends AppCompatActivity implements ConnectListener, AdapterListener {
     private static final int
             REQUEST_BLUETOOTH_PERMISSION = 0,
             REQUEST_CAMERA_PERMISSION = 1,
@@ -95,14 +97,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     private void setupButtons() {
         queue_add.setOnClickListener(v -> {
-            if (adapter.isActionMode()) {
-                //delete action is here
-                model.removeFromQueue(adapter.getSelected());
-                adapter.deactivateActionMode();
-
-                add_menu_expanded = false;
-                queue_add.setImageResource(R.drawable.ic_add);
-            } else if (add_menu_expanded) {
+            if (add_menu_expanded) {
                 //back action is here
                 add_menu_expanded = false;
                 queue_add.setImageResource(R.drawable.ic_add);
@@ -120,16 +115,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_gallery.setOnClickListener(v -> gallery());
         queue_camera.hide();
         queue_gallery.hide();
-    }
-
-    private void setupAdd(boolean actionMode) {
-        if (actionMode) {
-            queue_add.setImageResource(R.drawable.ic_delete);
-            queue_camera.hide();
-            queue_gallery.hide();
-        } else {
-            queue_add.setImageResource(R.drawable.ic_add);
-        }
     }
 
     private void setupList() {
@@ -251,10 +236,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 break;
-            case R.id.main_menu_sort:
-                if (adapter.isActionMode())
-                    adapter.deactivateActionMode();
-                adapter.toggleSort();
             case R.id.main_menu_bluetooth:
                 if (!client.isConnected()) {
                     if (!client.isBluetoothEnabled()) {
@@ -335,10 +316,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     public void onClick(View view, int pos) {
-        if (!adapter.isActionMode()) {
-            Image clicked = adapter.get(pos);
-            model.sendImage(clicked);
-        }
+        Image clicked = adapter.get(pos);
+        model.sendImage(clicked);
     }
 
     @Override
@@ -347,8 +326,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     }
 
     @Override
-    public void onActionModeChange(boolean actionMode) {
-        Log.e("Actionmode", "Actionmode changed to: "+actionMode);
-        setupAdd(actionMode);
+    public void onSwiped(int pos) {
+        model.removeFromQueue(Collections.singletonList(adapter.get(pos)));
     }
 }

@@ -7,11 +7,6 @@
         android:title="barcode"
         app:showAsAction="always"/>
 
-    <item android:id="@+id/main_menu_sort"
-        android:icon="@drawable/ic_sort"
-        android:title="sort"
-        app:showAsAction="always"/>
-
     <item android:id="@+id/main_menu_settings"
         android:title="settings"
         android:icon="@drawable/ic_settings"

@@ -4,7 +4,7 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.python.pythonator.ui.templates.adapter.listener.ActionListener;
+import com.python.pythonator.ui.templates.adapter.listener.AdapterActionListener;
 
 import java.util.List;
 
@@ -18,14 +18,14 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
 
     /**
      * Constructor to set an actionlistener
-     * @param actionListener the listener to send callbacks to in case of clicks or action mode changes
+     * @param adapterActionListener the listener to send callbacks to in case of clicks or action mode changes
      */
-    public AdapterAction(ActionListener actionListener) {
-        super(null, actionListener);
+    public AdapterAction(AdapterActionListener adapterActionListener) {
+        super(null, adapterActionListener);
     }
 
     /**
-     * @see #AdapterAction(ActionListener)
+     * @see #AdapterAction(AdapterActionListener)
      * Same function, without having to call with null as argument
      */
     public AdapterAction() {
@@ -43,10 +43,10 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
 
             if (actionMode && !hasSelected()) {
                 actionMode = false;
-                ((ActionListener) click_listener).onActionModeChange(false);
+                ((AdapterActionListener) adapter_listener).onActionModeChange(false);
             }
         } else {
-            click_listener.onClick(view, pos);
+            adapter_listener.onClick(view, pos);
         }
     }
 
@@ -59,13 +59,13 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
     public boolean onLongClick(View view, int pos) {
         if (!actionMode) {
             actionMode = true;
-            ((ActionListener) click_listener).onActionModeChange(true);
+            ((AdapterActionListener) adapter_listener).onActionModeChange(true);
         }
         boolean consumed =  super.onLongClick(view, pos);
 
         if (actionMode && !hasSelected()) {
             actionMode = false;
-            ((ActionListener) click_listener).onActionModeChange(false);
+            ((AdapterActionListener) adapter_listener).onActionModeChange(false);
         }
         return consumed;
     }
@@ -79,7 +79,7 @@ public abstract class AdapterAction<T> extends AdapterCheckable<T> {
 
     public void deactivateActionMode() {
         actionMode = false;
-        ((ActionListener) click_listener).onActionModeChange(false);
+        ((AdapterActionListener) adapter_listener).onActionModeChange(false);
         selected_items.clear();
     }
     /**

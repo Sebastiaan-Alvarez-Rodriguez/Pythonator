@@ -1,24 +1,19 @@
 package com.python.pythonator.ui.templates.adapter.viewholder;
 
 
-
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.python.pythonator.ui.templates.adapter.listener.ClickListener;
+import com.python.pythonator.ui.templates.adapter.InternalClickListener;
 
 public abstract class ViewHolder<T> extends RecyclerView.ViewHolder {
-    protected ClickListener clickListener;
+    protected InternalClickListener internalClickListener;
 
-    public ViewHolder(@NonNull View itemView) {
-        this(itemView, null);
-    }
-
-    public ViewHolder(@NonNull View itemView, @NonNull ClickListener clickListener) {
+    public ViewHolder(@NonNull View itemView, @NonNull InternalClickListener internalClickListener) {
         super(itemView);
-        this.clickListener = clickListener;
+        this.internalClickListener = internalClickListener;
         findViews();
         setupClicks();
     }
