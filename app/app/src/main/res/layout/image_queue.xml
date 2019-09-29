@@ -42,37 +42,4 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_queue_text" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/main_fab_camera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toTopOf="@+id/main_fab_gallery"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_camera" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/main_fab_gallery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toTopOf="@+id/main_fab_add"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_gallery" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/main_fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
-        android:clickable="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_add" />
 </androidx.constraintlayout.widget.ConstraintLayout>
