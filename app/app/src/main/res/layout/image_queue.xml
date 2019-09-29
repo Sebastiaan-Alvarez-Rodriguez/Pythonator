@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <View
+        android:id="@+id/main_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/main_queue_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Local queue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_divider" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/main_queue_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_queue_text" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/main_fab_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toTopOf="@+id/main_fab_gallery"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_camera" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/main_fab_gallery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toTopOf="@+id/main_fab_add"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_gallery" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/main_fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="32dp"
+        android:clickable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_add" />
+</androidx.constraintlayout.widget.ConstraintLayout>
