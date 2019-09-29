@@ -5,7 +5,7 @@ The Pythonator is controlled by a host computer via a simple binary serial comma
 ## Status codes
 - `0x00` OK: No error
 - `0x01` Out of bounds: The operation would result in the Pythonator's pen going out of the reachable range.
-- '0x02' Unknown command: A sent command was not recognized.
+- `0x02` Unknown command: Command was not recognized.
 
 ## Commands
 - `0x00` START: Indicate the start of a command stream. This enables the stepper drivers and retracts the pen.
@@ -16,6 +16,7 @@ The Pythonator is controlled by a host computer via a simple binary serial comma
 - `0x05` LINE: Draw a line from the current location to the target coordinates. Parameters:
     - Target x-coordinate in cells (u16).
     - Target y-coordinate in cells (u16).
+
     Returns:
     - `OK` if no error occured. The pen is at (x, y).
     - `Out of bounds` if (x, y) would be out of the reachable range. The pen's location remains unchanged.
