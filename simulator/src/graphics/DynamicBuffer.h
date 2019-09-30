@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <algorithm>
+#include <initializer_list>
 #include <cstddef>
 
 class DynamicBuffer {
@@ -23,6 +24,16 @@ public:
 
     operator GLuint() const {
         return this->buffer;
+    }
+
+    template <typename T>
+    void append(GLenum target, const T& data) {
+        this->append(target, &data, 1);
+    }
+
+    template <typename T>
+    void append(GLenum target, const std::initializer_list<T> data) {
+        this->append(target, data.begin(), data.size());
     }
 
     template <typename T>

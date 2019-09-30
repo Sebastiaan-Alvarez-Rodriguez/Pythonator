@@ -2,6 +2,7 @@
 #include <memory>
 #include <string_view>
 #include <stdexcept>
+#include <cmath>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include "Utility.h"
@@ -11,14 +12,23 @@
 using GlfwWindowPtr = std::unique_ptr<GLFWwindow, Deleter<&glfwDestroyWindow>>;
 
 void run(GLFWwindow* window) {
-    glClearColor(.5f, .5f, .5f, 1.0f);
-    glLineWidth(2.0f);
+    glClearColor(.8f, .8f, .8f, 1.0f);
+    glLineWidth(1.0f);
 
     auto sim = Simulator();
-    sim.line_to({0, pythonator::limits::range.y - 1});
-    sim.line_to({pythonator::limits::range.x - 1, pythonator::limits::range.y - 1});
-    sim.line_to({pythonator::limits::range.x - 1, 0});
-    sim.line_to({0, 0});
+
+    const auto n = 1000;
+    const auto a = 3.14159265f * 2 / n;
+    const auto r = 1000;
+    const auto mid = pythonator::limits::range / 2.f;
+
+    sim.move_to(mid + Vec2F{r, 0});
+
+    for (auto i = 0; i <= n; ++i) {
+        float t = i * a;
+        auto pos = Vec2F(std::cos(t * 7), std::sin(t * 6)) * r + mid;
+        sim.line_to(static_cast<Vec2Sz>(pos));
+    }
 
     {
         int width, height;
@@ -44,12 +54,12 @@ void run(GLFWwindow* window) {
     });
 
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT);
 
         sim.draw();
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     glfwSetWindowUserPointer(window, nullptr);

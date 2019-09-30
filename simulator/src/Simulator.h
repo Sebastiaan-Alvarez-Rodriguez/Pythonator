@@ -10,6 +10,7 @@
 class Simulator {
     ShaderProgram program;
     VertexArray vao;
+    DynamicBuffer background_buffer;
     DynamicBuffer pen_buffer;
     Vec2Sz pen_position;
 
@@ -18,7 +19,7 @@ public:
     void resize(Vec2Sz dim);
     void draw();
     pythonator::Status line_to(Vec2Sz destination);
-    pythonator::Status move_pen(Vec2Sz destination);
+    pythonator::Status move_to(Vec2Sz destination);
 };
 
 #endif
