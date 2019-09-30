@@ -22,7 +22,7 @@ namespace pythonator {
     };
 
     namespace limits {
-        constexpr const Vec2Sz range = {1500 * 2, 1000 * 2};
+        constexpr const Vec2Sz range = {1500 * 2, 1475 * 2};
     }
 }
 

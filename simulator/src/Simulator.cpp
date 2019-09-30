@@ -54,13 +54,13 @@ void Simulator::resize(Vec2Sz dim) {
     Mat4F perspective;
 
     if (aspect < range_aspect) {
-        auto height = range.y / aspect * range_aspect;
-        auto offset = (height - range.x) / 2;
-        std::cout << height << " " << range.y << std::endl;
-        perspective = Mat4F::orthographic(0, range.x, range.y, 0, -1, 1);
+        auto height = range.y * range_aspect / aspect;
+        auto offset = (height - range.y) / 2;
+        perspective = Mat4F::orthographic(0, range.x, height - offset, -offset, -1, 1);
     } else {
-        auto width = range.x * aspect / range_aspect;
-        perspective = Mat4F::orthographic((width - range.x) / 2, width, range.y, 0, -1, 1);
+        auto width = range.x / range_aspect * aspect;
+        auto offset = (width - range.x) / 2;
+        perspective = Mat4F::orthographic(-offset, width - offset, range.y, 0, -1, 1);
     }
 
     glUniformMatrix4fv(U_MVP, 1, false, perspective.data());
