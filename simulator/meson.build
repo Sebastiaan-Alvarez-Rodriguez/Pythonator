@@ -11,7 +11,7 @@ project(
 sources = [
     'src/main.cpp',
     'src/graphics/Shader.cpp',
-    'src/Simulator.cpp'
+    'src/Renderer.cpp'
 ]
 
 add_project_arguments(

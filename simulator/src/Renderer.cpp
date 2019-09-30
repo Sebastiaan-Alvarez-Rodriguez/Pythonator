@@ -1,4 +1,4 @@
-#include "Simulator.h"
+#include "Renderer.h"
 #include <algorithm>
 #include <iostream>
 #include "math/Mat.h"
@@ -33,9 +33,8 @@ constexpr const Attribute A_VERTEX = 0;
 constexpr const Uniform U_MVP = 1;
 constexpr const Uniform U_COLOR = 2;
 
-Simulator::Simulator():
-    program(VERTEX_SRC, FRAGMENT_SRC),
-    pen_position{0, 0} {
+Renderer::Renderer():
+    program(VERTEX_SRC, FRAGMENT_SRC) {
     this->program.use();
     glBindVertexArray(vao);
     glEnableVertexAttribArray(A_VERTEX);
@@ -48,7 +47,7 @@ Simulator::Simulator():
     });
 }
 
-void Simulator::resize(Vec2Sz dim) {
+void Renderer::resize(Vec2Sz dim) {
     constexpr const auto border = 10.f;
     auto range = pythonator::limits::range;
     auto range_aspect = static_cast<float>(range.x) / static_cast<float>(range.y);
@@ -71,7 +70,7 @@ void Simulator::resize(Vec2Sz dim) {
     glUniformMatrix4fv(U_MVP, 1, false, perspective.data());
 }
 
-void Simulator::draw() {
+void Renderer::draw() {
     glUniform3f(U_COLOR, 1, 1, 1);
     glBindBuffer(GL_ARRAY_BUFFER, this->background_buffer);
     glVertexAttribPointer(A_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -83,30 +82,6 @@ void Simulator::draw() {
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->pen_buffer.size() / sizeof(Vec2F)));
 }
 
-pythonator::Status Simulator::line_to(Vec2Sz destination) {
-    if (destination.x >= pythonator::limits::range.x || destination.y >= pythonator::limits::range.y) {
-        return pythonator::Status::ERR_BOUNDS;
-    }
-
-    auto data = std::array{
-        Vec2F{this->pen_position.x, this->pen_position.y},
-        Vec2F{destination.x, destination.y}
-    };
-
-    this->pen_buffer.append(GL_ARRAY_BUFFER, data.data(), data.size());
-    glVertexAttribPointer(A_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    this->pen_position = destination;
-
-    return pythonator::Status::OK;
-}
-
-pythonator::Status Simulator::move_to(Vec2Sz destination) {
-    if (destination.x >= pythonator::limits::range.x || destination.y >= pythonator::limits::range.y) {
-        return pythonator::Status::ERR_BOUNDS;
-    }
-
-    this->pen_position = destination;
-
-    return pythonator::Status::OK;
+void Renderer::add_line(Vec2F src, Vec2F dst) {
+    this->pen_buffer.append(GL_ARRAY_BUFFER, {src, dst});
 }

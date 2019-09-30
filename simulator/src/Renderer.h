@@ -1,5 +1,5 @@
-#ifndef _SIMULATOR_SIMULATOR_H
-#define _SIMULATOR_SIMULATOR_H
+#ifndef _SIMULATOR_RENDERER_H
+#define _SIMULATOR_RENDERER_H
 
 #include "Pythonator.h"
 #include "math/Vec.h"
@@ -7,19 +7,17 @@
 #include "graphics/Shader.h"
 #include "graphics/DynamicBuffer.h"
 
-class Simulator {
+class Renderer {
     ShaderProgram program;
     VertexArray vao;
     DynamicBuffer background_buffer;
     DynamicBuffer pen_buffer;
-    Vec2Sz pen_position;
 
 public:
-    Simulator();
+    Renderer();
     void resize(Vec2Sz dim);
     void draw();
-    pythonator::Status line_to(Vec2Sz destination);
-    pythonator::Status move_to(Vec2Sz destination);
+    void add_line(Vec2F src, Vec2F dst);
 };
 
 #endif

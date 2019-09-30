@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include "Utility.h"
-#include "Simulator.h"
+#include "Renderer.h"
 #include "Pythonator.h"
 
 using GlfwWindowPtr = std::unique_ptr<GLFWwindow, Deleter<&glfwDestroyWindow>>;
@@ -15,39 +15,40 @@ void run(GLFWwindow* window) {
     glClearColor(.8f, .8f, .8f, 1.0f);
     glLineWidth(1.0f);
 
-    auto sim = Simulator();
+    auto ren = Renderer();
 
     const auto n = 1000;
     const auto a = 3.14159265f * 2 / n;
     const auto r = 1000;
     const auto mid = pythonator::limits::range / 2.f;
 
-    sim.move_to(mid + Vec2F{r, 0});
+    auto last = mid + Vec2F{r, 0};
 
     for (auto i = 0; i <= n; ++i) {
         float t = i * a;
         auto pos = Vec2F(std::cos(t * 7), std::sin(t * 6)) * r + mid;
-        sim.line_to(static_cast<Vec2Sz>(pos));
+        ren.add_line(last, pos);
+        last = pos;
     }
 
     {
         int width, height;
         glfwGetWindowSize(window, &width, &height);
 
-        sim.resize({
+        ren.resize({
             static_cast<size_t>(width),
             static_cast<size_t>(height)
         });
     }
 
-    glfwSetWindowUserPointer(window, static_cast<void*>(&sim));
+    glfwSetWindowUserPointer(window, static_cast<void*>(&ren));
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
-        auto* sim = static_cast<Simulator*>(glfwGetWindowUserPointer(window));
+        auto* ren = static_cast<Renderer*>(glfwGetWindowUserPointer(window));
 
         glViewport(0, 0, width, height);
 
-        sim->resize({
+        ren->resize({
             static_cast<size_t>(width),
             static_cast<size_t>(height)
         });
@@ -57,7 +58,7 @@ void run(GLFWwindow* window) {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        sim.draw();
+        ren.draw();
 
         glfwSwapBuffers(window);
     }
