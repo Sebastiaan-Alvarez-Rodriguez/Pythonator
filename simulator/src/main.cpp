@@ -2,10 +2,12 @@
 #include <memory>
 #include <string_view>
 #include <stdexcept>
+#include <thread>
 #include <cmath>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include "Utility.h"
+#include "Simulator.h"
 #include "Renderer.h"
 #include "Pythonator.h"
 
@@ -16,20 +18,8 @@ void run(GLFWwindow* window) {
     glLineWidth(1.0f);
 
     auto ren = Renderer();
-
-    const auto n = 1000;
-    const auto a = 3.14159265f * 2 / n;
-    const auto r = 1000;
-    const auto mid = pythonator::limits::range / 2.f;
-
-    auto last = mid + Vec2F{r, 0};
-
-    for (auto i = 0; i <= n; ++i) {
-        float t = i * a;
-        auto pos = Vec2F(std::cos(t * 7), std::sin(t * 6)) * r + mid;
-        ren.add_line(last, pos);
-        last = pos;
-    }
+    auto sim = Simulator();
+    std::thread sim_thread(&Simulator::interpret_loop, &sim);
 
     {
         int width, height;
@@ -60,11 +50,18 @@ void run(GLFWwindow* window) {
 
         ren.draw();
 
+        sim.process_lines([&ren](const auto* lines, auto n) {
+            ren.add_lines(lines, n);
+        });
+
         glfwSwapBuffers(window);
     }
 
     glfwSetWindowUserPointer(window, nullptr);
     glfwSetFramebufferSizeCallback(window, nullptr);
+
+    sim.quit();
+    sim_thread.join();
 }
 
 int main(int argc, char* argv[]) {

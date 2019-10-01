@@ -82,6 +82,6 @@ void Renderer::draw() {
     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->pen_buffer.size() / sizeof(Vec2F)));
 }
 
-void Renderer::add_line(Vec2F src, Vec2F dst) {
-    this->pen_buffer.append(GL_ARRAY_BUFFER, {src, dst});
+void Renderer::add_lines(const Line* lines, size_t n) {
+    this->pen_buffer.append(GL_ARRAY_BUFFER, lines, n);
 }

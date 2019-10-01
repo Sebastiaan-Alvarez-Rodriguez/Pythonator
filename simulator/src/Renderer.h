@@ -14,10 +14,14 @@ class Renderer {
     DynamicBuffer pen_buffer;
 
 public:
+    struct Line {
+        Vec2F start, end;
+    };
+
     Renderer();
     void resize(Vec2Sz dim);
     void draw();
-    void add_line(Vec2F src, Vec2F dst);
+    void add_lines(const Line* line, size_t n);
 };
 
 #endif

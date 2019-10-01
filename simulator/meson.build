@@ -11,7 +11,8 @@ project(
 sources = [
     'src/main.cpp',
     'src/graphics/Shader.cpp',
-    'src/Renderer.cpp'
+    'src/Renderer.cpp',
+    'src/Simulator.cpp'
 ]
 
 add_project_arguments(
@@ -28,6 +29,7 @@ add_project_arguments(
 dependencies = [
     dependency('gl'),
     dependency('glfw3'),
+    dependency('threads'),
     subproject('glad').get_variable('glad_dep')
 ]
 
