@@ -13,7 +13,7 @@
 
 using GlfwWindowPtr = std::unique_ptr<GLFWwindow, Deleter<&glfwDestroyWindow>>;
 
-void run(GLFWwindow* window) {
+void run(GLFWwindow* window, bool draw_moves) {
     glClearColor(.8f, .8f, .8f, 1.0f);
     glLineWidth(1.0f);
 
@@ -54,6 +54,12 @@ void run(GLFWwindow* window) {
             ren.add_lines(lines, n);
         });
 
+        if (draw_moves) {
+            sim.process_moves([&ren](const auto* lines, auto n) {
+                ren.add_moves(lines, n);
+            });
+        }
+
         glfwSwapBuffers(window);
     }
 
@@ -67,6 +73,14 @@ void run(GLFWwindow* window) {
 int main(int argc, char* argv[]) {
     if (glfwInit() != GLFW_TRUE) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
+    }
+
+    bool draw_moves = false;
+    for (int i = 1; i < argc; ++i) {
+        auto arg = std::string_view(argv[i]);
+        if (arg == "-m" || arg == "--draw-moves") {
+            draw_moves = true;
+        }
     }
 
     struct GlfwTerminator {
@@ -86,7 +100,7 @@ int main(int argc, char* argv[]) {
     gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
     glfwSwapInterval(1);
 
-    run(window.get());
+    run(window.get(), draw_moves);
 
     return 0;
 }

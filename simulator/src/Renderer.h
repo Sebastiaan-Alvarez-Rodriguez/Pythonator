@@ -12,6 +12,7 @@ class Renderer {
     VertexArray vao;
     DynamicBuffer background_buffer;
     DynamicBuffer pen_buffer;
+    DynamicBuffer move_buffer;
 
 public:
     struct Line {
@@ -22,6 +23,7 @@ public:
     void resize(Vec2Sz dim);
     void draw();
     void add_lines(const Line* line, size_t n);
+    void add_moves(const Line* line, size_t n);
 };
 
 #endif
