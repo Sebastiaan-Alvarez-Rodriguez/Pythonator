@@ -29,7 +29,7 @@
 
 // The delay to wait after a step pulse to make sure the motors finish
 // their step, in us.
-#define STEPPER_STEP_DELAY 1000
+#define STEPPER_STEP_DELAY 790
 
 // Initialize the stepper driver pins and set the steppers to idle.
 void stepper_init();

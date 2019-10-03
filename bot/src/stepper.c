@@ -50,8 +50,8 @@ static void move(uint8_t bits, int steps) {
 // line, where the common terms between the distance of the horizontal move and diagonal
 // move are eliminated.
 enum status stepper_line_to(uint16_t x, uint16_t y) {
-    if (x >= STEPPER_RANGE_X || y >= STEPPER_RANGE_Y) {
-        return STATUS_OK;
+    if (x > STEPPER_RANGE_X || y > STEPPER_RANGE_Y) {
+        return STATUS_ERR_BOUNDS;
     }
 
     int32_t delta_x, delta_y;
@@ -101,5 +101,5 @@ enum status stepper_line_to(uint16_t x, uint16_t y) {
     stepper_state.x = x;
     stepper_state.y = y;
 
-    return STATUS_ERR_BOUNDS;
+    return STATUS_OK;
 }

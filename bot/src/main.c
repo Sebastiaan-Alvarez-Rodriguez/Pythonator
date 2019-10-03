@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include "pinout.h"
 #include "serial.h"
@@ -17,14 +18,16 @@ int main() {
     pen_init();
     serial_init();
 
+    sei();
+
     while (true) {
-        enum command cmd = (enum command) serial_getchar();
+        enum command cmd = (enum command) serial_get_u8();
         enum status status = STATUS_OK;
 
         switch (cmd) {
         case CMD_START:
-            stepper_enable();
             pen_set(PEN_UP);
+            stepper_enable();
             break;
         case CMD_END:
             pen_set(PEN_UP);
@@ -52,11 +55,7 @@ int main() {
             status = STATUS_ERR_UNKNOWN_CMD;
         }
 
-        serial_putchar((uint8_t) status);
-
-        LED_PORT |= LED_MASK;
-        _delay_ms(100);
-        LED_PORT &= ~LED_MASK;
+        serial_put_u8((uint8_t) status);
     }
 
     return 0;
