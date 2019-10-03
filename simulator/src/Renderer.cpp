@@ -76,6 +76,11 @@ void Renderer::draw() {
     glVertexAttribPointer(A_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(this->background_buffer.size() / sizeof(Vec2F)));
 
+    glUniform3f(U_COLOR, .7f, .7f, .7f);
+    glBindBuffer(GL_ARRAY_BUFFER, this->move_buffer);
+    glVertexAttribPointer(A_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(this->move_buffer.size() / sizeof(Vec2F)));
+
     glUniform3f(U_COLOR, 0, 0, 1);
     glBindBuffer(GL_ARRAY_BUFFER, this->pen_buffer);
     glVertexAttribPointer(A_VERTEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
@@ -84,4 +89,8 @@ void Renderer::draw() {
 
 void Renderer::add_lines(const Line* lines, size_t n) {
     this->pen_buffer.append(GL_ARRAY_BUFFER, lines, n);
+}
+
+void Renderer::add_moves(const Line* lines, size_t n) {
+    this->move_buffer.append(GL_ARRAY_BUFFER, lines, n);
 }

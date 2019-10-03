@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 executable(
-    'pythonatorsim',
+    'ptnsim',
     sources,
     dependencies: dependencies,
     include_directories: include_directories('src')

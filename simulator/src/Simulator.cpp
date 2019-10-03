@@ -22,6 +22,7 @@ void Simulator::interpret_loop() {
 
         switch (static_cast<pythonator::Command>(command_byte)) {
         case pythonator::Command::START:
+
             this->steppers_activated = true;
             this->pen_down = false;
             this->position = Vec2Sz(0);
@@ -104,13 +105,18 @@ int Simulator::read_u16le() {
 }
 
 pythonator::Status Simulator::line_to(const Vec2Sz& dst) {
-    if (dst.x >= pythonator::limits::range.x || dst.y >= pythonator::limits::range.y) {
+    if (dst.x > pythonator::limits::range.x || dst.y > pythonator::limits::range.y) {
         return pythonator::Status::ERR_BOUNDS;
     }
 
     auto lock = std::lock_guard(this->line_queue_mutex);
 
-    this->line_queue.push_back({this->position, dst});
+    if (this->pen_down) {
+        this->line_queue.push_back({this->position, dst});
+    } else {
+        this->move_queue.push_back({this->position, dst});
+    }
+
     this->position = dst;
 
     return pythonator::Status::OK;
