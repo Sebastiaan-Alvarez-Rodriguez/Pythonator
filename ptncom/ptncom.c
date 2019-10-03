@@ -162,6 +162,11 @@ int main(int argc, const char* argv[]) {
         }
     }
 
+    if (!device) {
+        puts("Error: missing parameter <device>");
+        return EXIT_FAILURE;
+    }
+
     int input_fd = 0;
     if (input) {
         input_fd = open(input, O_RDONLY);

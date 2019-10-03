@@ -11,7 +11,7 @@
 
 // The number of micro steps the stepper motor drivers are configured to. This is the
 // same for the x and y axis.
-#define STEPPER_MICROSTEPS 4
+#define STEPPER_MICROSTEPS 8
 
 // The number of cells per full step. Microstepping is only accurate to half steps.
 #define STEPPER_CELLS_PER_STEP 2
@@ -29,7 +29,7 @@
 
 // The delay to wait after a step pulse to make sure the motors finish
 // their step, in us.
-#define STEPPER_STEP_DELAY 790
+#define STEPPER_STEP_DELAY 490
 
 // Initialize the stepper driver pins and set the steppers to idle.
 void stepper_init();
