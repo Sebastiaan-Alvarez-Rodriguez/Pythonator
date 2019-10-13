@@ -1,8 +1,8 @@
 import sys
 
 class Limits:
-    RANGE_X = 3000
-    RANGE_Y = 2950
+    RANGE_X = 2950
+    RANGE_Y = 3000
 
 class Command:
     START = 0x00

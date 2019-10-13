@@ -2,7 +2,7 @@
 #define _PYTHONATOR_PEN_H
 
 // The time to wait until the pen is moved from up to down or vice versa, in ms.
-#define PEN_ACTUATE_DELAY 400
+#define PEN_ACTUATE_DELAY 200
 
 // Enum to indicate the pen's state: either down (drawing) or up (not drawing).
 enum pen_state {

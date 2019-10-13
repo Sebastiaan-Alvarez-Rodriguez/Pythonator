@@ -25,7 +25,7 @@ class DxfProcessor:
             self.lines.append([(sx, sy), (ex, ey)])
 
     def add_arc(self, center, radius, start_angle, arc):
-        segments = int(abs(arc) * radius / SEGMENT_SIZE)
+        segments = int(math.ceil(abs(arc) * radius / SEGMENT_SIZE))
         a = arc / segments
 
         x = center[0] + math.cos(start_angle) * radius
@@ -51,10 +51,10 @@ class DxfProcessor:
         start = math.radians(entity.dxf.start_angle)
         end = math.radians(entity.dxf.end_angle)
 
-        if start_angle < end_angle:
-            arc = end_angle - start_angle
+        if start < end:
+            arc = end - start
         else:
-            arc = end_angle - start_angle + math.pi * 2
+            arc = end - start + math.pi * 2
 
         self.add_arc(center, radius, start, arc)
 
