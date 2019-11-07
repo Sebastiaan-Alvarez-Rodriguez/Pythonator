@@ -1,5 +1,6 @@
 package com.python.pythonator.util;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class ListUtil {
-    public static <T> List<T> getRemoved(@Nullable Collection<T> old, @Nullable Collection<T> cur) {
+    public static @NonNull <T> List<T> getRemoved(@Nullable Collection<T> old, @Nullable Collection<T> cur) {
         if (old == null)
             return new ArrayList<>();
         if (cur == null)
@@ -19,7 +20,7 @@ public class ListUtil {
         return retList;
     }
 
-    public static <T> List<T> getAdded(@Nullable Collection<T> old, @Nullable Collection<T> cur) {
+    public static @NonNull <T> List<T> getAdded(@Nullable Collection<T> old, @Nullable Collection<T> cur) {
         if (cur == null)
             return new ArrayList<>();
         if (old == null) {

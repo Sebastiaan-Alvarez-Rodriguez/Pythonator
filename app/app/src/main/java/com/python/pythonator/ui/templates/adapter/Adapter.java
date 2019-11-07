@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+// TODO: Use sortedList, to move sent images all the way up? With updateItemAt(int index, T item) to keep supporting reordering?
+//  Also: Function in children for onItemMove, specifying whether item may move up/down or not
 /**
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
@@ -55,7 +57,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * Adds a single item to the list, and displays it to the user
      * @param item The item to be added
      */
-    public void add(T item) {
+    private void add(T item) {
         list.add(item);
     }
 
@@ -63,7 +65,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * @see #add(Object)
      * Function to add a collection of items to the list
      */
-    public void add(Collection<T> items) {
+    private void add(Collection<T> items) {
         for (T item : items) {
             list.add(item);
             notifyItemInserted(list.size()-1);
@@ -75,7 +77,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * Removes a single item from the list, if it is in the list. Does nothing otherwise
      * @param item item to be removed
      */
-    public void remove(T item) {
+    private void remove(T item) {
         list.remove(item);
     }
 
@@ -83,7 +85,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * @see #remove(Object)
      * Function to remove a collection of items from the list
      */
-    public void remove(Collection<T> items) {
+    private void remove(Collection<T> items) {
         for (T item : items) {
             int index = list.indexOf(item);
             list.remove(index);

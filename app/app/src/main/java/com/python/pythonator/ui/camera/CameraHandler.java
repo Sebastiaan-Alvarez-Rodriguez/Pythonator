@@ -19,6 +19,8 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static com.python.pythonator.util.FileUtil.createImageFile;
+
 public class CameraHandler {
     public static final int REQUEST_CAPTURE = 300;
 
@@ -38,7 +40,7 @@ public class CameraHandler {
     public void capture(@NonNull Activity activity) {
         Intent intent = createCaptureIntent();
         if (intent != null)
-            activity.startActivityForResult(intent, REQUEST_CAPTURE);
+            activity.startActivityForResult(Intent.createChooser(intent, null), REQUEST_CAPTURE);
     }
 
     /**
@@ -48,7 +50,7 @@ public class CameraHandler {
     public void capture(@NonNull Fragment fragment) {
         Intent intent = createCaptureIntent();
         if (intent != null)
-            fragment.startActivityForResult(intent, REQUEST_CAPTURE);
+            fragment.startActivityForResult(Intent.createChooser(intent, null), REQUEST_CAPTURE);
     }
 
     public String getFilepath() {
@@ -57,27 +59,15 @@ public class CameraHandler {
 
     private @Nullable Intent createCaptureIntent() {
         Intent ext_photo_intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        File photo_file = createImageFile();
+        File photo_file = createImageFile(context);
+        filepath = photo_file.getAbsolutePath();
         Uri photoURI = FileProvider.getUriForFile(context,"com.python.pythonator.fileprovider", photo_file);
         ext_photo_intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
 
         return Intent.createChooser(ext_photo_intent, "Take a picture");
     }
 
-    @CheckResult
-    private @NonNull File createImageFile() {
-        String time_stamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String image_file_name = "JPEG_" + time_stamp + "_";
-        File storage_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-        File app_dir = new File(storage_dir, "Pythonator");
-        boolean created = app_dir.mkdirs();
 
-        Log.e("CAMHANDLE", "Created subdir: "+created);
-        File file = new File(app_dir, image_file_name+".jpg");
-        MediaScannerConnection.scanFile(context, new String[] {file.getAbsolutePath()}, null, null);
-        filepath = file.getAbsolutePath();
-        return file;
-    }
 
     public void addPictureToGallery() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);

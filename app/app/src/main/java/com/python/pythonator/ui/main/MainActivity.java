@@ -32,10 +32,11 @@ import com.python.pythonator.backend.bluetooth.ConnectListener;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.structures.Image;
 import com.python.pythonator.ui.camera.CameraHandler;
+import com.python.pythonator.ui.edit.ImageEditHandler;
 import com.python.pythonator.ui.main.adapter.QueueAdapter;
 import com.python.pythonator.ui.settings.SettingsActivity;
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
-import com.python.pythonator.util.UriUtil;
+import com.python.pythonator.util.FileUtil;
 
 import java.util.Collections;
 
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     private boolean add_menu_expanded = false;
 
     private CameraHandler camera_handler;
-
+    private ImageEditHandler image_edit_handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,7 +145,23 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         snackbar.setAction("Try again", v -> client.activateBluetooth(this));
     }
 
-    //End of setups
+    private void sendImage(@NonNull Image image) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        int retries = preferences.getInt("retries", 4);
+        model.trySendImage(image, retries, state -> {
+            switch (state) {
+                case SENT:
+                    runOnUiThread(() -> Snackbar.make(view, "A new image has been sent to the server", Snackbar.LENGTH_LONG).show());
+                    break;
+                case FAILED:
+                    runOnUiThread(() -> Snackbar.make(view, "Could not send image to the server", Snackbar.LENGTH_SHORT).show());
+                    break;
+                case BUSY:
+                    runOnUiThread(() -> Snackbar.make(view, "Already sending another image!", Snackbar.LENGTH_SHORT).show());
+                    break;
+            }
+        });
+    }
 
     private void capture() {
         if (!checkPermissionCamera()) {
@@ -204,7 +221,12 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 REQUEST_GALLERY_PERMISSION);
     }
 
-    //End of permissions
+    public void startConnect() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String server_name = preferences.getString("bluetooth_host", "Pythonator");
+        int retries = preferences.getInt("retries", 4);
+        client.connect(server_name, this, retries);
+    }
 
     @Override
     public void onChangeState(BluetoothConnectState state) {
@@ -213,8 +235,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         switch (state) {
             case PENDING:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
+                Log.e("EDDD", "Received::::::::::::::::::::::::::::::::::::: pending");
                 break;
             case CONNECTED:
+                Log.e("EDDD", "Received::::::::::::::::::::::::::::::::::::: COnnected");
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
                 break;
             case NOT_FOUND:
@@ -242,9 +266,9 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                         client.activateBluetooth(this);
                         snackbar.dismiss();
                     } else {
+                        //TODO: Check if works
                         Log.e("Retry", "Retrying to establish client connection");
-                        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                        client.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
+                        startConnect();
                     }
                 }
                 break;
@@ -266,31 +290,39 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
         switch (requestCode) {
             case BluetoothClient.REQUEST_ENABLE_BLUETOOTH:
-                if (result_ok) {
-                    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-                    client.connect(preferences.getString("bluetooth_host", "Pythonator"), this);
-                } else {
+                if (result_ok)
+                    startConnect();
+                else
                     snackbar.show();
-                }
                 break;
             case CameraHandler.REQUEST_CAPTURE:
-                Log.e("QUEUE", "Received photo");
-                camera_handler.addPictureToGallery();
-                model.addToQueue(new Image(camera_handler.getFilepath()));
-
+                if (result_ok) {
+                    Log.e("QUEUE", "Received photo");
+                    camera_handler.addPictureToGallery();
+                    model.addToQueue(new Image(camera_handler.getFilepath()));
+                }
                 break;
             case REQUEST_IMAGE_GALLERY:
-
-                if (data != null) {
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        Log.e("QUEUE", "Received gallery");
-                        Image image = new Image(UriUtil.getPath(this, uri));
-                        model.addToQueue(image);
-                        break;
+                if (result_ok) {
+                    if (data != null) {
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            Log.e("QUEUE", "Received gallery");
+                            Image image = new Image(FileUtil.getPath(this, uri));
+                            model.addToQueue(image);
+                            break;
+                        }
                     }
+                    Snackbar.make(view, "Error retrieving picture", Snackbar.LENGTH_LONG).show();
                 }
-                Snackbar.make(view, "Error retrieving picture", Snackbar.LENGTH_LONG).show();
+                break;
+            case ImageEditHandler.REQUEST_IMAGE_EDIT:
+                if (result_ok) {
+                    String output_file = image_edit_handler.getEditedPath();
+                    if (output_file != null)
+                        model.replaceQueueItem(image_edit_handler.getImage(), new Image(output_file));
+                }
+                image_edit_handler = null;
                 break;
         }
     }
@@ -317,11 +349,13 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     @Override
     public void onClick(View view, int pos) {
         Image clicked = adapter.get(pos);
-        model.sendImage(clicked);
+        image_edit_handler = new ImageEditHandler(this, clicked);
+        image_edit_handler.edit(this);
     }
 
     @Override
     public boolean onLongClick(View view, int pos) {
+        sendImage(adapter.get(pos));
         return true;
     }
 

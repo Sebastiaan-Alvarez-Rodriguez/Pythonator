@@ -14,14 +14,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
+import static com.python.pythonator.util.FileUtil.getFileSize;
+
 public class Image {
     private String abs_path;
-
+    private String size;
     private Bitmap.CompressFormat format;
 
     public Image(@NonNull String abs_path) {
         this.abs_path = abs_path;
-
+        this.size = getFileSize(abs_path);
         this.format = Bitmap.CompressFormat.PNG;
 //        rotateImage();
     }
@@ -51,6 +53,16 @@ public class Image {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         bitmap.compress(format, quality, os);
         return bitmap;
+    }
+
+    @CheckResult
+    public String getSize() {
+        return size;
+    }
+
+    @CheckResult
+    public String getPath() {
+        return abs_path;
     }
 
     @CheckResult
@@ -95,8 +107,8 @@ public class Image {
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
 
-            // Calculate inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, requested_width, requested_height);
+            // Calculate inSampleSize (10 * insamplesize for extra low quality)
+            options.inSampleSize = 10 * calculateInSampleSize(options, requested_width, requested_height);
 
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;

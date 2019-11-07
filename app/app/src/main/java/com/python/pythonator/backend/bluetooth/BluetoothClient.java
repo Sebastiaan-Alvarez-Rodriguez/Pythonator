@@ -8,11 +8,13 @@ import android.content.Intent;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnector;
 import com.python.pythonator.backend.bluetooth.connector.state.BluetoothStateWatcher;
 import com.python.pythonator.structures.Image;
+import com.python.pythonator.util.ThreadUtil;
 
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -73,12 +75,18 @@ public class BluetoothClient {
      * @param server_name the name of the server to connect to
      * @param connection_listener the interface which gets called with possible outcomes
      */
-    public void connect(@NonNull String server_name, @NonNull ConnectListener connection_listener) {
-        bluetooth_state_watcher.setState(BluetoothConnectState.PENDING);
-        bluetooth_state_watcher.watch(connection_listener);
-        bluetooth_connector.search(server_name, (state, socket) -> {
-            if (state == BluetoothConnectState.CONNECTED)
+    public void connect(@NonNull String server_name, @NonNull ConnectListener connection_listener, int retries) {
+        if (retries == 0)
+            return;
+        connection_listener.onChangeState(BluetoothConnectState.PENDING);
 
+        bluetooth_connector.search(server_name, (state, socket) -> {
+            if (state == BluetoothConnectState.CONNECTED) {
+                bluetooth_state_watcher.watch(connection_listener);
+            } else {
+                ThreadUtil.sleep(2000);
+                connect(server_name, connection_listener, retries - 1);
+            }
             bluetooth_socket = socket;
         });
     }
@@ -109,23 +117,21 @@ public class BluetoothClient {
         return bluetooth_state_watcher.getState() == BluetoothConnectState.CONNECTED;
     }
 
-    public void sendImage(@NonNull Image image, @NonNull SendListener listener) {
+    @WorkerThread
+    public boolean sendImage(@NonNull Image image) {
         if (isConnected()) {
-            Executors.newSingleThreadExecutor().execute(() -> {
-                try {
-                    DataOutputStream out = new DataOutputStream(bluetooth_socket.getOutputStream());
-                    out.writeLong((long)image.getBitmapBytes().length);
-                    out.write(image.getBitmapBytes());
-                } catch (Exception ignored){}
+            try {
+                DataOutputStream out = new DataOutputStream(bluetooth_socket.getOutputStream());
+                out.writeLong((long)image.getBitmapBytes().length);
+                out.write(image.getBitmapBytes());
+            } catch (Exception ignored){}
 
-                try {
-                    InputStream in = bluetooth_socket.getInputStream();
-                    int result = in.read();
-                    listener.onResult(result == 0);
-                    if (result == -1)
-                        disconnect();
-                } catch (Exception ignored){}
-            });
+            try {
+                InputStream in = bluetooth_socket.getInputStream();
+                int result = in.read();
+                 return result == 0;
+            } catch (Exception ignored){}
         }
+        return false;
     }
 }

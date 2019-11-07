@@ -39,7 +39,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         String bluetooth_hostname = preferences.getString("bluetooth_host", "Pythonator");
         bluetooth_host.setText(bluetooth_hostname);
-        int bluetooth_search_secs = preferences.getInt("bluetooth_search", 4);
+        int bluetooth_search_secs = preferences.getInt("retries", 4);
         bluetooth_search.setText(String.valueOf(bluetooth_search_secs));
     }
 
@@ -83,7 +83,7 @@ public class SettingsActivity extends AppCompatActivity {
                     SharedPreferences.Editor editor = preferences.edit();
 
                     editor.putString("bluetooth_host", new_host);
-                    editor.putInt("bluetooth_search", new_time);
+                    editor.putInt("retries", new_time);
                     editor.apply();
                     finish();
                 }

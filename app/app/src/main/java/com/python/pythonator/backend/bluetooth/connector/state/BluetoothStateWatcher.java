@@ -23,7 +23,12 @@ public class BluetoothStateWatcher {
         this.application_context = application_context;
     }
 
+    /**
+     * Watches to see if connection closes. Call this function only after a successful connection
+     * @param connect_listener
+     */
     public void watch(@NonNull ConnectListener connect_listener) {
+        connect_listener.onChangeState(BluetoothConnectState.CONNECTED);
         if (state_handler != null)
             stop();
         this.state_handler = new StateBroadcastHandler(application_context, new_state -> {
