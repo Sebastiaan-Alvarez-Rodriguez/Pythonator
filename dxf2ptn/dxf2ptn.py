@@ -140,6 +140,8 @@ if args.layers is not None:
 elif args.exclude_layers is not None:
     arg_layers = args.exclude_layers.split(',')
     layers = [l for l in doc.layers if l.dxf.name not in arg_layers]
+else:
+    layers = doc.layers
 
 proc = DxfProcessor(doc, layers)
 proc.process()

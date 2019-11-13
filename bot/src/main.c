@@ -22,25 +22,28 @@ int main() {
 
     while (true) {
         enum command cmd = (enum command) serial_get_u8();
-        enum status status = STATUS_OK;
-
         switch (cmd) {
         case CMD_START:
+            serial_put_u8((uint8_t) STATUS_OK);
             pen_set(PEN_UP);
             stepper_enable();
             break;
         case CMD_END:
+            serial_put_u8((uint8_t) STATUS_OK);
             pen_set(PEN_UP);
             stepper_line_to(0, 0);
             stepper_disable();
             break;
         case CMD_PEN_DOWN:
+            serial_put_u8((uint8_t) STATUS_OK);
             pen_set(PEN_DOWN);
             break;
         case CMD_PEN_UP:
+            serial_put_u8((uint8_t) STATUS_OK);
             pen_set(PEN_UP);
             break;
         case CMD_ORIG:
+            serial_put_u8((uint8_t) STATUS_OK);
             pen_set(PEN_UP);
             stepper_line_to(0, 0);
             break;
@@ -48,14 +51,17 @@ int main() {
             {
                 uint16_t x = serial_get_u16le();
                 uint16_t y = serial_get_u16le();
-                status = stepper_line_to(x, y);
+                enum status status = stepper_validate_line(x, y);
+                serial_put_u8((uint8_t) status);
+
+                if (status == STATUS_OK) {
+                    stepper_line_to(x, y);
+                }
             }
             break;
         default:
-            status = STATUS_ERR_UNKNOWN_CMD;
+            serial_put_u8((uint8_t) STATUS_ERR_UNKNOWN_CMD);
         }
-
-        serial_put_u8((uint8_t) status);
     }
 
     return 0;

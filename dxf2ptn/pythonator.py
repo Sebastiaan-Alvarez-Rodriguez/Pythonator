@@ -1,7 +1,7 @@
 import sys
 
 class Limits:
-    RANGE_X = 2950
+    RANGE_X = 2900
     RANGE_Y = 3000
 
 class Command:
@@ -28,7 +28,7 @@ def pen_up():
     write_binary(Command.PEN_UP)
 
 def line(x, y):
-    if x < 0 or x >= Limits.RANGE_X or y < 0 or y >= Limits.RANGE_Y:
+    if x < 0 or x > Limits.RANGE_X or y < 0 or y > Limits.RANGE_Y:
         raise ValueError()
 
     write_binary(Command.LINE)
@@ -40,6 +40,9 @@ def output_simple(lines):
     x = 0
     y = 0
     start()
+
+    (sx, sy), _ = lines[0]
+    line(sx, sy)
     pen_down()
 
     for (sx, sy), (ex, ey) in lines:

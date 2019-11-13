@@ -20,6 +20,9 @@ void stepper_init() {
 
     STEPPER_DISABLE_DDR |= STEPPER_DISABLE_MASK;
     STEPPER_DISABLE_PORT |= STEPPER_DISABLE_MASK;
+
+    stepper_state.x = 0;
+    stepper_state.y = 0;
 }
 
 void stepper_disable() {
@@ -49,11 +52,7 @@ static void move(uint8_t bits, int steps) {
 // move to a diagonal move. The closest one is selected by calculating the distance to the
 // line, where the common terms between the distance of the horizontal move and diagonal
 // move are eliminated.
-enum status stepper_line_to(uint16_t x, uint16_t y) {
-    if (x > STEPPER_RANGE_X || y > STEPPER_RANGE_Y) {
-        return STATUS_ERR_BOUNDS;
-    }
-
+void stepper_line_to(uint16_t x, uint16_t y) {
     int32_t delta_x, delta_y;
 
     if (stepper_state.x < x) {
@@ -82,6 +81,10 @@ enum status stepper_line_to(uint16_t x, uint16_t y) {
         delta_y = tmp;
     }
 
+    // When drawing the line, we dont want to conform to cells
+    delta_x *= STEPPER_MICROSTEPS_PER_CELL;
+    delta_y *= STEPPER_MICROSTEPS_PER_CELL;
+
     int32_t j = 0;
 
     for (int32_t i = 1; i <= delta_x; ++i) {
@@ -92,14 +95,20 @@ enum status stepper_line_to(uint16_t x, uint16_t y) {
         j += k;
 
         if (swap_axes) {
-            move(STEPPER_STEP_Y_MASK | (STEPPER_STEP_X_MASK * k), STEPPER_MICROSTEPS_PER_CELL);
+            move(STEPPER_STEP_Y_MASK | (STEPPER_STEP_X_MASK * k), 1);
         } else {
-            move(STEPPER_STEP_X_MASK | (STEPPER_STEP_Y_MASK * k), STEPPER_MICROSTEPS_PER_CELL);
+            move(STEPPER_STEP_X_MASK | (STEPPER_STEP_Y_MASK * k), 1);
         }
     }
 
     stepper_state.x = x;
     stepper_state.y = y;
+}
+
+enum status stepper_validate_line(uint16_t x, uint16_t y) {
+    if (x > STEPPER_RANGE_X || y > STEPPER_RANGE_Y) {
+        return STATUS_ERR_BOUNDS;
+    }
 
     return STATUS_OK;
 }
