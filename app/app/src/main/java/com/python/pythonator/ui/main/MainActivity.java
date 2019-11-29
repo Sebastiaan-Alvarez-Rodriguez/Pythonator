@@ -30,17 +30,18 @@ import com.python.pythonator.R;
 import com.python.pythonator.backend.bluetooth.BluetoothClient;
 import com.python.pythonator.backend.bluetooth.ConnectListener;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
-import com.python.pythonator.structures.Image;
+import com.python.pythonator.structures.ImageQueueItem;
 import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.edit.ImageEditHandler;
 import com.python.pythonator.ui.main.adapter.QueueAdapter;
+import com.python.pythonator.ui.main.adapter.QueueImageClickListener;
 import com.python.pythonator.ui.settings.SettingsActivity;
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.util.FileUtil;
 
 import java.util.Collections;
 
-public class MainActivity extends AppCompatActivity implements ConnectListener, AdapterListener {
+public class MainActivity extends AppCompatActivity implements ConnectListener, AdapterListener, QueueImageClickListener {
     private static final int
             REQUEST_BLUETOOTH_PERMISSION = 0,
             REQUEST_CAMERA_PERMISSION = 1,
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     }
 
     private void setupList() {
-        adapter = new QueueAdapter(this);
+        adapter = new QueueAdapter(this, this);
         model.getQueue().observe(this, adapter);
         queue_list.setLayoutManager(new LinearLayoutManager(this));
         queue_list.setAdapter(adapter);
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         snackbar.setAction("Try again", v -> client.activateBluetooth(this));
     }
 
-    private void sendImage(@NonNull Image image) {
+    private void sendImage(@NonNull ImageQueueItem image) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         int retries = preferences.getInt("retries", 4);
         model.trySendImage(image, retries, state -> {
@@ -299,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 if (result_ok) {
                     Log.e("QUEUE", "Received photo");
                     camera_handler.addPictureToGallery();
-                    model.addToQueue(new Image(camera_handler.getFilepath()));
+                    model.addToQueue(new ImageQueueItem(camera_handler.getFilepath()));
                 }
                 break;
             case REQUEST_IMAGE_GALLERY:
@@ -308,8 +309,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                         Uri uri = data.getData();
                         if (uri != null) {
                             Log.e("QUEUE", "Received gallery");
-                            Image image = new Image(FileUtil.getPath(this, uri));
-                            model.addToQueue(image);
+                            model.addToQueue(new ImageQueueItem(FileUtil.getPath(this, uri)));
                             break;
                         }
                     }
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 if (result_ok) {
                     String output_file = image_edit_handler.getEditedPath();
                     if (output_file != null)
-                        model.replaceQueueItem(image_edit_handler.getImage(), new Image(output_file));
+                        model.replaceQueueItem(image_edit_handler.getImageQueueItem(), new ImageQueueItem(output_file));
                 }
                 image_edit_handler = null;
                 break;
@@ -348,19 +348,30 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     public void onClick(View view, int pos) {
-        Image clicked = adapter.get(pos);
+        ImageQueueItem clicked = adapter.get(pos);
         image_edit_handler = new ImageEditHandler(this, clicked);
         image_edit_handler.edit(this);
     }
 
     @Override
     public boolean onLongClick(View view, int pos) {
-        sendImage(adapter.get(pos));
         return true;
     }
 
     @Override
     public void onSwiped(int pos) {
         model.removeFromQueue(Collections.singletonList(adapter.get(pos)));
+    }
+
+    @Override
+    public void onThumbnailClick(int pos) {
+
+    }
+
+    @Override
+    public void onSendClicked(int pos) {
+        ImageQueueItem item = adapter.get(pos);
+        if (!item.isSent())
+        sendImage(item);
     }
 }

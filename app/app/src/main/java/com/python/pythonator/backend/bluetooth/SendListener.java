@@ -4,6 +4,7 @@ public interface SendListener {
     enum SendState {
         FAILED,
         BUSY,
+        ALREADY_SENT,
         SENT
     }
 

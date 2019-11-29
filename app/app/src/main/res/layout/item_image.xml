@@ -30,4 +30,13 @@
         app:layout_constraintStart_toEndOf="@+id/item_image_thumbnail"
         tools:text="10MB" />
 
+    <ImageButton
+        android:id="@+id/item_image_send"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@android:drawable/ic_menu_send"
+        app:layout_constraintBottom_toTopOf="@+id/item_image_size"
+        app:layout_constraintEnd_toEndOf="@+id/item_image_size"
+        app:layout_constraintTop_toTopOf="@+id/item_image_thumbnail" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

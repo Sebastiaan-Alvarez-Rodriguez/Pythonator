@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
-import com.python.pythonator.structures.Image;
+import com.python.pythonator.structures.ImageQueueItem;
 
 import java.io.File;
 import java.util.List;
@@ -25,15 +25,15 @@ public class ImageEditHandler {
 
     private @NonNull Context context;
     private String filepath;
-    private Image image;
+    private ImageQueueItem image;
 
-    public ImageEditHandler(@NonNull Context context, @NonNull Image image) {
+    public ImageEditHandler(@NonNull Context context, @NonNull ImageQueueItem image) {
         this.context = context;
         this.image = image;
         filepath = null;
     }
 
-    public final @NonNull Image getImage() {
+    public final @NonNull ImageQueueItem getImageQueueItem() {
         return image;
     }
 
@@ -47,7 +47,7 @@ public class ImageEditHandler {
      * @param activity The calling activity
      */
     public void edit(@NonNull Activity activity) {
-        File file = new File(image.getPath());
+        File file = new File(image.get().getPath());
         final Intent intent = new Intent(Intent.ACTION_EDIT);
         File photo_file = createImageFile(context);
         filepath = photo_file.getAbsolutePath();
