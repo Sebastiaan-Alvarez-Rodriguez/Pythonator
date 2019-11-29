@@ -7,29 +7,24 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SortedList;
-
-import com.python.pythonator.structures.ImageQueueItem;
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 import com.python.pythonator.ui.templates.adapter.touch.TouchCallback;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 import com.python.pythonator.util.ListUtil;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-// TODO: Use sortedList, to move sent images all the way up? With updateItemAt(int index, T item) to keep supporting reordering?
-//  Also: Function in children for onItemMove, specifying whether item may move up/down or not
 /**
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
  */
 public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, InternalClickListener, DragListener {
 
-    protected SortedList<T> list;
-    protected Comperator<T> comperator;
+    protected List<T> list;
     protected AdapterListener adapter_listener;
 
     protected TouchCallback touch_callback;
@@ -43,8 +38,7 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
         adapter_listener = adapterListener;
         touch_callback = new TouchCallback(this);
         user_sorting_enabled = false;
-        comperator = getComperator();
-        list = getSortedList(comperator);
+        list = new ArrayList<>();
         toggleSort();
     }
 
@@ -74,7 +68,6 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
             list.add(item);
             notifyItemInserted(list.size()-1);
         }
-
     }
 
     /**
@@ -89,13 +82,13 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
      * @see #remove(Object)
      * Function to remove a collection of items from the list
      */
-//    private void remove(Collection<T> items) {
-//        for (T item : items) {
-//            int index = list.indexOf(item);
-//            list.remove(index);
-//            notifyItemRemoved(index);
-//        }
-//    }
+    private void remove(Collection<T> items) {
+        for (T item : items) {
+            int index = list.indexOf(item);
+            list.remove(index);
+            notifyItemRemoved(index);
+        }
+    }
 
     /**
      * Assigns a viewholder an item from the list, depending on the position of the viewholder in the list
@@ -132,21 +125,14 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
         if (fromPosition < toPosition) {
-            T tmp = list.get(toPosition);
+            for (int i = fromPosition; i < toPosition; i++)
+                Collections.swap(list, i, i + 1);
 
-            list.updateItemAt(toPosition, list.get(fromPosition));
-            list.updateItemAt(fromPosition, tmp);
-            for (int i = fromPosition; i < toPosition; i++) {
-                list.updateItemAt(i, list.get(i));
-//                Collections.swap(list, i, i + 1);
-            }
         } else {
-            for (int i = fromPosition; i > toPosition; i--) {
-                list.updateItemAt(i, list.get(i-1));
-//                Collections.swap(list, i, i - 1);
-            }
+            for (int i = fromPosition; i > toPosition; i--)
+                Collections.swap(list, i, i - 1);
         }
-//        notifyItemMoved(fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
     }
 
     @Override
@@ -168,20 +154,15 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
         touch_callback.setAllowSwipe(user_sorting_enabled);
     }
 
-    protected abstract @NonNull SortedList<T> getSortedList(Comperator<T> comperator);
-
-    protected abstract @NonNull Comperator<T> getComperator();
-
     /**
      * Callback receiver for list changes.
      * @param newList the new List
      */
     @Override
     public void onChanged(@Nullable List<T> newList) {
-        list.replaceAll(newList);
-//        List<T> removed = ListUtil.getRemoved(list, newList);
-//        List<T> added = ListUtil.getAdded(list, newList);
-//        remove(removed);
-//        add(added);
+        List<T> removed = ListUtil.getRemoved(list, newList);
+        List<T> added = ListUtil.getAdded(list, newList);
+        remove(removed);
+        add(added);
     }
 }

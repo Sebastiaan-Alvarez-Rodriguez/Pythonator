@@ -20,16 +20,16 @@ public class DiscoveryBroadcastHandler implements BroadcastDiscoveryResultInterf
     }
 
     public void startBroadcast() {
-        Log.e("DiscoveryHandle", "Starting broadcast");
+        Log.i("DiscoveryHandle", "Starting broadcast");
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         application_context.registerReceiver(broadcast, filter);
-        Log.e("DiscoveryHandle", "Started broadcast");
+        Log.i("DiscoveryHandle", "Started broadcast");
     }
 
     public void stopBroadcast() {
         application_context.unregisterReceiver(broadcast);
-        Log.e("DiscoveryHandle", "Stopped broadcast");
+        Log.i("DiscoveryHandle", "Stopped broadcast");
     }
 
     @Override

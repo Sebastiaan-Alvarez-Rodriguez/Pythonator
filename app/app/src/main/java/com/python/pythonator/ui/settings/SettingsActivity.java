@@ -31,7 +31,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void findGlobalViews() {
         bluetooth_host = findViewById(R.id.settings_bluetooth_host);
-        bluetooth_search = findViewById(R.id.settings_bluetooth_search);
+        bluetooth_search = findViewById(R.id.settings_bluetooth_retry);
     }
 
     private void setValues() {

@@ -1,10 +1,9 @@
-package com.python.pythonator.backend.bluetooth;
+package com.python.pythonator.backend.bluetooth.sender;
 
 public interface SendListener {
     enum SendState {
         FAILED,
-        BUSY,
-        ALREADY_SENT,
+        SENDING,
         SENT
     }
 

@@ -39,4 +39,13 @@
         app:layout_constraintEnd_toEndOf="@+id/item_image_size"
         app:layout_constraintTop_toTopOf="@+id/item_image_thumbnail" />
 
+    <ProgressBar
+        android:id="@+id/item_image_progress"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="63dp"
+        android:layout_height="61dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/item_image_send"
+        app:layout_constraintEnd_toEndOf="@+id/item_image_send" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

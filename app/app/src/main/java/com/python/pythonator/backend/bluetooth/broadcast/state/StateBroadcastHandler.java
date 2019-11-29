@@ -11,24 +11,23 @@ public class StateBroadcastHandler {
     private BluetoothStateBroadcast broadcast;
     private Context application_context;
 
-    public StateBroadcastHandler(@NonNull Context application_context, @NonNull StateChangeInterface listen_interface) {
+    public StateBroadcastHandler(@NonNull Context application_context, @NonNull StateChangeInterface listener) {
         this.application_context = application_context;
-        broadcast = new BluetoothStateBroadcast(listen_interface);
+        broadcast = new BluetoothStateBroadcast(listener);
     }
 
     public void startBroadcast() {
-        Log.e("StateHandle", "Starting broadcast");
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
         filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 
         application_context.registerReceiver(broadcast, filter);
-        Log.e("StateHandle", "Started broadcast");
+        Log.i("StateHandle", "Started broadcast");
     }
 
     public void stopBroadcast() {
         application_context.unregisterReceiver(broadcast);
-        Log.e("StateHandle", "Stopped broadcast");
+        Log.i("StateHandle", "Stopped broadcast");
     }
 }

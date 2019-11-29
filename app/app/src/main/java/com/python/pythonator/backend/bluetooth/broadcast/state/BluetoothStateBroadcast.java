@@ -19,8 +19,6 @@ public class BluetoothStateBroadcast extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-//        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
         if (BluetoothDevice.ACTION_ACL_CONNECTED.equals(action)) {
             listen_interface.onStateChange(BluetoothConnectState.CONNECTED);
         } else if (BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED.equals(action)) {

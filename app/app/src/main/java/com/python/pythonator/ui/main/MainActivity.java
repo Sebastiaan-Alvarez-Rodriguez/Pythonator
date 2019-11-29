@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,7 +29,8 @@ import com.python.pythonator.R;
 import com.python.pythonator.backend.bluetooth.BluetoothClient;
 import com.python.pythonator.backend.bluetooth.ConnectListener;
 import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
-import com.python.pythonator.structures.ImageQueueItem;
+import com.python.pythonator.backend.bluetooth.sender.SendListener;
+import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.edit.ImageEditHandler;
 import com.python.pythonator.ui.main.adapter.QueueAdapter;
@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     private RecyclerView queue_list;
     private FloatingActionButton queue_add, queue_camera, queue_gallery;
-    private TextView queue_nothing_drawn;
 
     private boolean add_menu_expanded = false;
 
@@ -77,13 +76,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         findGlobalViews();
         setupButtons();
         setupList();
-        setupTexts();
         setupActionBar();
         setupSnackBar();
-        if (!checkPermissionBluetooth()) {
+        if (!checkPermissionBluetooth())
             askPermissionBluetooth();
-        }
-
 
         client.activateBluetooth(this);
     }
@@ -94,7 +90,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_add = findViewById(R.id.main_fab_add);
         queue_camera = findViewById(R.id.main_fab_camera);
         queue_gallery = findViewById(R.id.main_fab_gallery);
-        queue_nothing_drawn = view.findViewById(R.id.main_queue_nothing_drawn);
     }
 
     private void setupButtons() {
@@ -127,11 +122,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
     }
 
-    private void setupTexts() {
-        queue_nothing_drawn.setVisibility(View.VISIBLE);
-    }
-
-
     private void setupActionBar() {
         Toolbar myToolbar = findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -147,9 +137,14 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     }
 
     private void sendImage(@NonNull ImageQueueItem image) {
+        if (image.isSent()) {
+            Snackbar.make(view, "Item is already sent to the server", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         int retries = preferences.getInt("retries", 4);
-        model.trySendImage(image, retries, state -> {
+        model.sendImage(image, state -> {
             switch (state) {
                 case SENT:
                     runOnUiThread(() -> Snackbar.make(view, "A new image has been sent to the server", Snackbar.LENGTH_LONG).show());
@@ -157,11 +152,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 case FAILED:
                     runOnUiThread(() -> Snackbar.make(view, "Could not send image to the server", Snackbar.LENGTH_SHORT).show());
                     break;
-                case BUSY:
-                    runOnUiThread(() -> Snackbar.make(view, "Already sending another image!", Snackbar.LENGTH_SHORT).show());
-                    break;
             }
-        });
+        }, retries);
     }
 
     private void capture() {
@@ -179,9 +171,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             return;
         }
 
-        Intent intent=new Intent(Intent.ACTION_PICK);
+        Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
-//        String[] mimeTypes = {"image/jpeg", "image/png"};
         String[] mimeTypes = {"image/png"};
         intent.putExtra(Intent.EXTRA_MIME_TYPES,mimeTypes);
         startActivityForResult(intent,REQUEST_IMAGE_GALLERY);
@@ -236,10 +227,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         switch (state) {
             case PENDING:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
-                Log.e("EDDD", "Received::::::::::::::::::::::::::::::::::::: pending");
                 break;
             case CONNECTED:
-                Log.e("EDDD", "Received::::::::::::::::::::::::::::::::::::: COnnected");
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
                 break;
             case NOT_FOUND:
@@ -267,8 +256,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                         client.activateBluetooth(this);
                         snackbar.dismiss();
                     } else {
-                        //TODO: Check if works
-                        Log.e("Retry", "Retrying to establish client connection");
+                        Log.i("Retry", "Retrying to establish client connection");
                         startConnect();
                     }
                 }
@@ -298,7 +286,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 break;
             case CameraHandler.REQUEST_CAPTURE:
                 if (result_ok) {
-                    Log.e("QUEUE", "Received photo");
                     camera_handler.addPictureToGallery();
                     model.addToQueue(new ImageQueueItem(camera_handler.getFilepath()));
                 }
@@ -308,7 +295,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                     if (data != null) {
                         Uri uri = data.getData();
                         if (uri != null) {
-                            Log.e("QUEUE", "Received gallery");
                             model.addToQueue(new ImageQueueItem(FileUtil.getPath(this, uri)));
                             break;
                         }
@@ -325,6 +311,12 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 image_edit_handler = null;
                 break;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        //imagine I got list of images here
+        super.onDestroy();
     }
 
     @Override
@@ -348,9 +340,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     public void onClick(View view, int pos) {
-        ImageQueueItem clicked = adapter.get(pos);
-        image_edit_handler = new ImageEditHandler(this, clicked);
-        image_edit_handler.edit(this);
     }
 
     @Override
@@ -365,7 +354,11 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     public void onThumbnailClick(int pos) {
-
+        ImageQueueItem clicked = adapter.get(pos);
+        if (clicked.getState() != SendListener.SendState.SENDING && clicked.getState() != SendListener.SendState.SENT) {
+            image_edit_handler = new ImageEditHandler(this, clicked);
+            image_edit_handler.edit(this);
+        }
     }
 
     @Override

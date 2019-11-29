@@ -42,7 +42,7 @@ public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
             return;
         String name = device.getName();
         String address = device.getAddress();
-        Log.e("Connector", "Name: "+name+". MAC: "+address);
+        Log.i("Connector", "Name: "+name+". MAC: "+address);
         if (name.equals(server_name)) {
             stop_search();
             broadcast_handler.stopBroadcast();
@@ -53,7 +53,7 @@ public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
                 bluetooth_socket.connect();
                 connector_interface.onConnectResult(BluetoothConnectState.CONNECTED, bluetooth_socket);
             } catch (IOException initial) {
-                Log.e("Connector", "Normal instantiation failed. Trying hack...");
+                Log.i("Connector", "Normal instantiation failed. Trying hack...");
                 try {
                     Class<?> clazz = device.getClass();
                     Class<?>[] paramTypes = new Class<?>[]{Integer.TYPE};
@@ -62,10 +62,10 @@ public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
                     bluetooth_socket = (BluetoothSocket) m.invoke((device), params);
                     device.createBond();
                     bluetooth_socket.connect();
-                    Log.e("Connector", "Hack worked just fine");
+                    Log.i("Connector", "Hack worked just fine");
                     connector_interface.onConnectResult(BluetoothConnectState.CONNECTED, bluetooth_socket);
                 } catch (Exception second) {
-                    Log.e("Connector", "Reflection hack failed!");
+                    Log.i("Connector", "Reflection hack failed!");
                     connector_interface.onConnectResult(BluetoothConnectState.NOT_CONNECTED, null);
                 }
             }
@@ -74,16 +74,19 @@ public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
 
     @Override
     public void onSearchFinished(int amount_found) {
-        if (amount_found == 0)
-            connector_interface.onConnectResult(BluetoothConnectState.NO_LOCATION, null);
-        else
-            connector_interface.onConnectResult(BluetoothConnectState.NOT_FOUND, null);
         stop_search();
+        if (amount_found == 0) {
+            connector_interface.onConnectResult(BluetoothConnectState.NO_LOCATION, null);
+        }
+        else {
+            connector_interface.onConnectResult(BluetoothConnectState.NOT_FOUND, null);
+        }
     }
 
-    public void search(@NonNull String server_name, BluetoothConnectorInterface connector_interface) {
+    public synchronized void search(@NonNull String server_name, BluetoothConnectorInterface connector_interface) {
+        if (is_searching)
+            return;
         if (!adapter.isEnabled()) {
-            Log.e("OOF", "Bluetooth is off");
             connector_interface.onConnectResult(BluetoothConnectState.NO_BLUETOOTH, null);
             return;
         }
@@ -98,7 +101,7 @@ public class BluetoothConnector implements BroadcastDiscoveryResultInterface {
         adapter.startDiscovery();
     }
 
-    public void stop_search() {
+    private synchronized void stop_search() {
         if (is_searching) {
             if (adapter.isDiscovering())
                 adapter.cancelDiscovery();

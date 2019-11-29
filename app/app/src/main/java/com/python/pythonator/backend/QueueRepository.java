@@ -1,17 +1,16 @@
 package com.python.pythonator.backend;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.python.pythonator.backend.bluetooth.BluetoothClient;
-import com.python.pythonator.backend.bluetooth.SendListener;
-import com.python.pythonator.structures.Image;
-import com.python.pythonator.structures.ImageQueueItem;
-import com.python.pythonator.util.ThreadUtil;
+import com.python.pythonator.backend.bluetooth.receiver.ReceivedListener;
+import com.python.pythonator.backend.bluetooth.sender.SendListener;
+import com.python.pythonator.structures.queue.ImageQueueItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,12 +21,10 @@ import java.util.concurrent.Executors;
 public class QueueRepository {
 
     private MutableLiveData<List<ImageQueueItem>> queue;
-    private boolean is_sending;
     private BluetoothClient client;
 
     public QueueRepository(Context application_context) {
         queue = new MutableLiveData<>();
-        is_sending = false;
         client = BluetoothClient.getClient(application_context);
     }
 
@@ -73,33 +70,23 @@ public class QueueRepository {
         });
     }
 
-    public void trySendImage(@NonNull ImageQueueItem image, int retries, SendListener listener) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            if (image.isSent()) {
-                listener.onResult(SendListener.SendState.ALREADY_SENT);
-            } else if (!is_sending && client.isConnected()) {
-                is_sending = true;
-                SendListener.SendState state = trySendImageInternal(image.get(), retries);
-                is_sending = false;
-                image.setSent(state == SendListener.SendState.SENT);
-                listener.onResult(state);
-            } else if (is_sending) {
-                listener.onResult(SendListener.SendState.BUSY);
-            } else {
-                listener.onResult(SendListener.SendState.FAILED);
-            }
-        });
+    public synchronized void sendImage(@NonNull ImageQueueItem image, @NonNull SendListener listener, int retries) {
+        if (image.isSent() || image.getState() == SendListener.SendState.SENDING) {
+            return;
+        } else if (client.isConnected()) {
+            Log.i("QueueRepo", "Backend ready to send image, with retries = "+retries);
+            image.setState(SendListener.SendState.SENDING);
+            Executors.newSingleThreadExecutor().execute(() ->
+                    client.sendImage(image.get(), result -> {
+                    image.setState(result);
+                    listener.onResult(result);
+                    }, retries));
+        } else {
+            listener.onResult(SendListener.SendState.FAILED);
+        }
     }
 
-    @WorkerThread
-    private SendListener.SendState trySendImageInternal(@NonNull Image image, int retries) {
-        if (retries == 0)
-            return SendListener.SendState.FAILED;
-        if (client.sendImage(image)) {
-            return SendListener.SendState.SENT;
-        } else {
-            ThreadUtil.sleep(2000);
-            return trySendImageInternal(image, retries-1);
-        }
+    public synchronized void receiveConfirm(@NonNull ReceivedListener listener, int retries) {
+        client.receiveConfirm(listener, retries);
     }
 }

@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 
-import com.python.pythonator.structures.ImageQueueItem;
+import com.python.pythonator.structures.queue.ImageQueueItem;
 
 import java.io.File;
 import java.util.List;
