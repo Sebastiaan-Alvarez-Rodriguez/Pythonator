@@ -7,8 +7,6 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.python.pythonator.backend.QueueRepository;
-import com.python.pythonator.backend.bluetooth.receiver.ReceivedListener;
-import com.python.pythonator.backend.bluetooth.sender.SendListener;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 
 import java.util.Collection;
@@ -21,7 +19,7 @@ public class MainViewModel extends AndroidViewModel {
 
     public MainViewModel(@NonNull Application application) {
         super(application);
-        repository = new QueueRepository(application.getApplicationContext());
+        repository = new QueueRepository();
     }
 
     public LiveData<List<ImageQueueItem>> getQueue() {
@@ -48,13 +46,5 @@ public class MainViewModel extends AndroidViewModel {
 
     public void replaceQueueItem(@NonNull ImageQueueItem oldImage, @NonNull ImageQueueItem newImage) {
             repository.replaceQueueItem(oldImage, newImage);
-    }
-
-    public void sendImage(@NonNull ImageQueueItem image, @NonNull SendListener listener, int retries) {
-        repository.sendImage(image, listener, retries);
-    }
-
-    public void receiveConfirm(@NonNull ReceivedListener listener, int retries) {
-        repository.receiveConfirm(listener, retries);
     }
 }

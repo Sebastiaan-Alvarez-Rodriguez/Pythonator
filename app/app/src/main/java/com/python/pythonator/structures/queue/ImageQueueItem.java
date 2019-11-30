@@ -1,6 +1,5 @@
 package com.python.pythonator.structures.queue;
 
-import com.python.pythonator.backend.bluetooth.sender.SendListener;
 import com.python.pythonator.structures.Image;
 
 public class ImageQueueItem extends QueueItem<Image> {
@@ -8,7 +7,7 @@ public class ImageQueueItem extends QueueItem<Image> {
         super(item);
     }
 
-    public ImageQueueItem(Image item, SendListener.SendState sent) {
+    public ImageQueueItem(Image item, ImageState sent) {
         super(item, sent);
     }
 

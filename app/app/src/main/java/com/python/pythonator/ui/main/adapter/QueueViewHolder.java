@@ -49,13 +49,13 @@ public class QueueViewHolder extends ViewHolder<ImageQueueItem> {
 
     @Override
     public void set(ImageQueueItem image) {
-        image.setListener(new_state -> {
+        image.setListener(new_state -> layout.post(() -> {
             switch (new_state) {
                 case SENDING:
                     send_button.setVisibility(View.INVISIBLE);
                     sending_overlay.setVisibility(View.VISIBLE);
                     break;
-                case FAILED:
+                case NOT_SENT:
                     sending_overlay.setVisibility(View.INVISIBLE);
                     send_button.setVisibility(View.VISIBLE);
                     break;
@@ -63,7 +63,7 @@ public class QueueViewHolder extends ViewHolder<ImageQueueItem> {
                     send_button.setVisibility(View.GONE);
                     break;
             }
-        });
+        }));
         image.get().getThumbnail(thumbnail_view.getWidth(), thumbnail_view.getHeight(), bitmap -> {
             thumbnail_view.post(() -> thumbnail_view.setImageBitmap(bitmap));
             size_view.setText(image.get().getSize());

@@ -26,11 +26,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.python.pythonator.R;
-import com.python.pythonator.backend.bluetooth.BluetoothClient;
-import com.python.pythonator.backend.bluetooth.ConnectListener;
-import com.python.pythonator.backend.bluetooth.connector.BluetoothConnectState;
-import com.python.pythonator.backend.bluetooth.sender.SendListener;
+import com.python.pythonator.backend.BtClient;
+import com.python.pythonator.backend.connection.BluetoothListener;
+import com.python.pythonator.backend.connection.ConnectListener;
+import com.python.pythonator.backend.connection.ConnectState;
 import com.python.pythonator.structures.queue.ImageQueueItem;
+import com.python.pythonator.structures.queue.ImageState;
 import com.python.pythonator.ui.camera.CameraHandler;
 import com.python.pythonator.ui.edit.ImageEditHandler;
 import com.python.pythonator.ui.main.adapter.QueueAdapter;
@@ -41,7 +42,9 @@ import com.python.pythonator.util.FileUtil;
 
 import java.util.Collections;
 
-public class MainActivity extends AppCompatActivity implements ConnectListener, AdapterListener, QueueImageClickListener {
+// Okay impl: https://stackoverflow.com/questions/49729452/how-to-keep-bluetooth-connection-background
+// library  : https://github.com/OmarAflak/Bluetooth-Library
+public class MainActivity extends AppCompatActivity implements ConnectListener, BluetoothListener, AdapterListener, QueueImageClickListener {
     private static final int
             REQUEST_BLUETOOTH_PERMISSION = 0,
             REQUEST_CAMERA_PERMISSION = 1,
@@ -49,11 +52,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             REQUEST_IMAGE_GALLERY = 3;
 
     private View view;
-    private Snackbar snackbar;
 
     private MenuItem bluetooth_search;
 
-    private BluetoothClient client;
+    private BtClient client;
 
     private MainViewModel model;
     private QueueAdapter adapter;
@@ -70,18 +72,30 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         model = ViewModelProviders.of(this).get(MainViewModel.class);
-
-        client = BluetoothClient.getClient(getApplicationContext());
         setContentView(R.layout.activity_main);
         findGlobalViews();
         setupButtons();
         setupList();
         setupActionBar();
-        setupSnackBar();
+        client = BtClient.getClient(getApplicationContext());
+        client.setConnectListener(this);
+        client.setBluetoothListener(this);
         if (!checkPermissionBluetooth())
             askPermissionBluetooth();
+    }
 
-        client.activateBluetooth(this);
+    @Override
+    protected void onStart() {
+        super.onStart();
+        client.onStart();
+        if(!client.isBluetoothEnabled())
+            client.enableBt(this);
+    }
+
+    @Override
+    protected void onStop() {
+        client.onStop();
+        super.onStop();
     }
 
     private void findGlobalViews() {
@@ -131,11 +145,6 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             actionbar.setTitle("Pythonator");
     }
 
-    private void setupSnackBar() {
-        snackbar = Snackbar.make(view, "Bluetooth is required to communicate with the client", Snackbar.LENGTH_INDEFINITE);
-        snackbar.setAction("Try again", v -> client.activateBluetooth(this));
-    }
-
     private void sendImage(@NonNull ImageQueueItem image) {
         if (image.isSent()) {
             Snackbar.make(view, "Item is already sent to the server", Snackbar.LENGTH_LONG).show();
@@ -144,16 +153,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         int retries = preferences.getInt("retries", 4);
-        model.sendImage(image, state -> {
-            switch (state) {
-                case SENT:
-                    runOnUiThread(() -> Snackbar.make(view, "A new image has been sent to the server", Snackbar.LENGTH_LONG).show());
-                    break;
-                case FAILED:
-                    runOnUiThread(() -> Snackbar.make(view, "Could not send image to the server", Snackbar.LENGTH_SHORT).show());
-                    break;
-            }
-        }, retries);
+        if (!client.sendImage(image))
+            startConnect();
     }
 
     private void capture() {
@@ -214,49 +215,21 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     }
 
     public void startConnect() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String server_name = preferences.getString("bluetooth_host", "Pythonator");
-        int retries = preferences.getInt("retries", 4);
-        client.connect(server_name, this, retries);
-    }
-
-    @Override
-    public void onChangeState(BluetoothConnectState state) {
-        if (bluetooth_search == null)
-            return;
-        switch (state) {
-            case PENDING:
-                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
-                break;
-            case CONNECTED:
-                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
-                break;
-            case NOT_FOUND:
-                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_out_of_range));
-                break;
-            case NO_LOCATION:
-                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_location_disabled));
-            case NO_BLUETOOTH:
-            case NOT_CONNECTED:
-                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
-                break;
-        }
+        if (!client.connect(PreferenceManager.getDefaultSharedPreferences(this).getString("bluetooth_host", "Pythonator")))
+            client.enableBt(this);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.main_menu_settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
             case R.id.main_menu_bluetooth:
                 if (!client.isConnected()) {
                     if (!client.isBluetoothEnabled()) {
-                        client.activateBluetooth(this);
-                        snackbar.dismiss();
+                        client.enableBt(this);
                     } else {
-                        Log.i("Retry", "Retrying to establish client connection");
                         startConnect();
                     }
                 }
@@ -269,6 +242,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         bluetooth_search = menu.findItem(R.id.main_menu_bluetooth);
+        if (!client.isConnected())
+            startConnect();
         return true;
     }
 
@@ -276,14 +251,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         boolean result_ok = resultCode == RESULT_OK;
-
         switch (requestCode) {
-            case BluetoothClient.REQUEST_ENABLE_BLUETOOTH:
-                if (result_ok)
-                    startConnect();
-                else
-                    snackbar.show();
-                break;
             case CameraHandler.REQUEST_CAPTURE:
                 if (result_ok) {
                     camera_handler.addPictureToGallery();
@@ -311,12 +279,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 image_edit_handler = null;
                 break;
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        //imagine I got list of images here
-        super.onDestroy();
+        client.enableBtResult(requestCode, resultCode);
     }
 
     @Override
@@ -355,7 +318,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     @Override
     public void onThumbnailClick(int pos) {
         ImageQueueItem clicked = adapter.get(pos);
-        if (clicked.getState() != SendListener.SendState.SENDING && clicked.getState() != SendListener.SendState.SENT) {
+        if (clicked.getState() == ImageState.NOT_SENT) {
             image_edit_handler = new ImageEditHandler(this, clicked);
             image_edit_handler.edit(this);
         }
@@ -366,5 +329,36 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         ImageQueueItem item = adapter.get(pos);
         if (!item.isSent())
         sendImage(item);
+    }
+
+    @Override
+    public void connectStatus(ConnectState state) {
+        switch (state) {
+            case CONNECTING:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
+                break;
+            case CONNECTED:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_connected));
+                break;
+            case NOT_FOUND:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_out_of_range));
+                break;
+            case DISCONNECTED:
+                runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_disabled));
+                break;
+        }
+    }
+
+    @Override
+    public void onBluetoothOn() {
+        startConnect();
+    }
+
+    @Override
+    public void onUserDeniedActivation() {
+        runOnUiThread(()-> Snackbar.make(view, "Bluetooth is required to communicate with the client", Snackbar.LENGTH_INDEFINITE)
+            .setAction("Try again", v -> startConnect())
+            .show()
+        );
     }
 }

@@ -1,15 +1,9 @@
 package com.python.pythonator.backend;
 
-import android.content.Context;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.python.pythonator.backend.bluetooth.BluetoothClient;
-import com.python.pythonator.backend.bluetooth.receiver.ReceivedListener;
-import com.python.pythonator.backend.bluetooth.sender.SendListener;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 
 import java.util.ArrayList;
@@ -21,11 +15,9 @@ import java.util.concurrent.Executors;
 public class QueueRepository {
 
     private MutableLiveData<List<ImageQueueItem>> queue;
-    private BluetoothClient client;
 
-    public QueueRepository(Context application_context) {
+    public QueueRepository() {
         queue = new MutableLiveData<>();
-        client = BluetoothClient.getClient(application_context);
     }
 
     public LiveData<List<ImageQueueItem>> getQueue() {
@@ -68,25 +60,5 @@ public class QueueRepository {
            list.set(index, imageNew);
            queue.postValue(list);
         });
-    }
-
-    public synchronized void sendImage(@NonNull ImageQueueItem image, @NonNull SendListener listener, int retries) {
-        if (image.isSent() || image.getState() == SendListener.SendState.SENDING) {
-            return;
-        } else if (client.isConnected()) {
-            Log.i("QueueRepo", "Backend ready to send image, with retries = "+retries);
-            image.setState(SendListener.SendState.SENDING);
-            Executors.newSingleThreadExecutor().execute(() ->
-                    client.sendImage(image.get(), result -> {
-                    image.setState(result);
-                    listener.onResult(result);
-                    }, retries));
-        } else {
-            listener.onResult(SendListener.SendState.FAILED);
-        }
-    }
-
-    public synchronized void receiveConfirm(@NonNull ReceivedListener listener, int retries) {
-        client.receiveConfirm(listener, retries);
     }
 }
