@@ -6,21 +6,24 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 
-import com.python.pythonator.structures.Image;
+import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.ui.templates.adapter.Adapter;
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
-public class QueueAdapter extends Adapter<Image> {
+public class QueueAdapter extends Adapter<ImageQueueItem> {
 
-    public QueueAdapter(@NonNull AdapterListener adapterListener) {
+    private QueueImageClickListener queueImageClickListener;
+
+    public QueueAdapter(@NonNull AdapterListener adapterListener, QueueImageClickListener queueImageClickListener) {
         super(adapterListener);
+        this.queueImageClickListener = queueImageClickListener;
     }
 
     @NonNull
     @Override
-    public ViewHolder<Image> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder<ImageQueueItem> onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(QueueViewHolder.layout_resource, parent,false);
-        return new QueueViewHolder(view, this);
+        return new QueueViewHolder(view, this, queueImageClickListener);
     }
 }

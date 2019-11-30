@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 import com.python.pythonator.ui.templates.adapter.touch.TouchCallback;
@@ -19,19 +18,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-// TODO: Use sortedList, to move sent images all the way up? With updateItemAt(int index, T item) to keep supporting reordering?
-//  Also: Function in children for onItemMove, specifying whether item may move up/down or not
 /**
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
  */
 public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, InternalClickListener, DragListener {
 
-    protected List<T> list = new ArrayList<>();
+    protected List<T> list;
     protected AdapterListener adapter_listener;
 
     protected TouchCallback touch_callback;
-    protected boolean sorting_enabled;
+    protected boolean user_sorting_enabled;
 
     /**
      * Constructor which sets given adapter_listener to send callbacks to, if the listener is not null
@@ -40,7 +37,8 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
     public Adapter(@Nullable AdapterListener adapterListener) {
         adapter_listener = adapterListener;
         touch_callback = new TouchCallback(this);
-        sorting_enabled = false;
+        user_sorting_enabled = false;
+        list = new ArrayList<>();
         toggleSort();
     }
 
@@ -70,7 +68,6 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
             list.add(item);
             notifyItemInserted(list.size()-1);
         }
-
     }
 
     /**
@@ -128,13 +125,12 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
         if (fromPosition < toPosition) {
-            for (int i = fromPosition; i < toPosition; i++) {
+            for (int i = fromPosition; i < toPosition; i++)
                 Collections.swap(list, i, i + 1);
-            }
+
         } else {
-            for (int i = fromPosition; i > toPosition; i--) {
+            for (int i = fromPosition; i > toPosition; i--)
                 Collections.swap(list, i, i - 1);
-            }
         }
         notifyItemMoved(fromPosition, toPosition);
     }
@@ -153,10 +149,11 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
     }
 
     public void toggleSort() {
-        sorting_enabled = !sorting_enabled;
-        touch_callback.setAllowDrag(sorting_enabled);
-        touch_callback.setAllowSwipe(sorting_enabled);
+        user_sorting_enabled = !user_sorting_enabled;
+        touch_callback.setAllowDrag(user_sorting_enabled);
+        touch_callback.setAllowSwipe(user_sorting_enabled);
     }
+
     /**
      * Callback receiver for list changes.
      * @param newList the new List
