@@ -5,11 +5,6 @@ It works like this:
 2. The server constructs a set of lines from this image to draw, and sends it to the drawer bot
 3. The drawer bot draws the lines
 
-
-## Parts
-There are 3 parts in this project: The app code, server code, and robot controller code.
-Each part has its own README.
-
 ## Usage
 0. Install app
 1. Take a picture of something you want drawn
