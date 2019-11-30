@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.python.pythonator.structures.queue.ImageQueueItem;
+import com.python.pythonator.structures.queue.ImageState;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,7 +51,7 @@ public class QueueRepository {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             List<ImageQueueItem> list = queue.getValue();
-            if (list == null || imageOld.isSent())
+            if (list == null || imageOld.getState() != ImageState.NOT_SENT)
                 return;
 
            int index = list.indexOf(imageOld);

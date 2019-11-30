@@ -54,9 +54,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         bt_listener = listener;
     }
 
-    public synchronized boolean connect(String devicename) {
-        if (!bluetooth.isEnabled())
-            return false;
+    public synchronized void connect(String devicename) {
         if (bluetooth.isConnected())
             bluetooth.disconnect();
 
@@ -97,7 +95,6 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
             public void onDeviceUnpaired(BluetoothDevice device) {}
         });
         bluetooth.startScanning();
-        return true;
     }
 
     public boolean isBluetoothEnabled() {

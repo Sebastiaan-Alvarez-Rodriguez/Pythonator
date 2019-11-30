@@ -55,14 +55,15 @@ public class BtSender {
                         Log.i("BtS", "Sending image... retry "+(i+1)+"/"+retries);
                         Image image = item.get();
                         DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                        out.writeLong((long) image.getBitmapBytes().length);
+                        byte[] to_send = image.getBitmapBytes();
+                        out.writeLong((long) to_send.length);
                         out.write(image.getBitmapBytes());
                         item.setState(ImageState.SENT);
                         orderqueue.add(item);
                         return;
                     } catch (Exception ignored) {}
                 }
-                Log.i("BtS", "Failed to send image, with "+retries+ "retries");
+                Log.i("BtS", "Failed to send image, with "+retries+ " retries");
                 item.setState(ImageState.NOT_SENT);
             }
         }, 0, 5, TimeUnit.SECONDS);

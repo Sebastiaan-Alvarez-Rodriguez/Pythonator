@@ -6,7 +6,6 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 
 import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
@@ -15,7 +14,18 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Utility functions for file manipulations
+ */
 public class FileUtil {
+
+    /**
+     * Converts a uri to a filepath, in a very dirty manner
+     * @param context Context of application
+     * @param uri Uri to convert
+     * @return filepath matching uri
+     */
+    @CheckResult
     public static String getPath(@NonNull Context context, @NonNull Uri uri ) {
         String result = null;
         String[] proj = { MediaStore.Images.Media.DATA };
@@ -33,6 +43,11 @@ public class FileUtil {
         return result;
     }
 
+    /**
+     * @param path Path of the file to return size for
+     * @return the file size of a given file
+     */
+    @CheckResult
     public static String getFileSize(@NonNull String path) {
         File file = new File(path);
         String modifiedFileSize;
@@ -54,9 +69,13 @@ public class FileUtil {
         return modifiedFileSize;
     }
 
+    /**
+     * @param context Application context (needed to make file)
+     * @return A newly created file in the global pictures environment
+     */
     @CheckResult
     public static @NonNull File createImageFile(@NonNull Context context) {
-        String time_stamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String time_stamp = SimpleDateFormat.getDateTimeInstance().format(new Date());
         String image_file_name = "JPEG_" + time_stamp + "_";
         File storage_dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         File app_dir = new File(storage_dir, "Pythonator");

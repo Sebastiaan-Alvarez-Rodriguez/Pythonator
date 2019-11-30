@@ -11,8 +11,12 @@ import com.python.pythonator.ui.templates.adapter.Adapter;
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
+/**
+ * Adapter to display a list of {@link ImageQueueItem}s
+ */
 public class QueueAdapter extends Adapter<ImageQueueItem> {
 
+    // Listener for clicks on specific parts on an ImageQueueItem
     private QueueImageClickListener queueImageClickListener;
 
     public QueueAdapter(@NonNull AdapterListener adapterListener, QueueImageClickListener queueImageClickListener) {

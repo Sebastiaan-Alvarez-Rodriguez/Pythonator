@@ -37,11 +37,6 @@ public class QueueItem<T> {
             listener.onChanged(state);
     }
 
-    public boolean isSent() {
-        return state == ImageState.SENT;
-    }
-
-
     public void setListener(@NonNull StateChangeListener listener) {
         this.listener = listener;
     }
