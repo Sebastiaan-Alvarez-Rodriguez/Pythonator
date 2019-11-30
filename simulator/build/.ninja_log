@@ -1,0 +1,7 @@
+# ninja log v5
+76	3444	1575143078	ptnsim@exe/subprojects_glad_src_glad.cpp.o	e6cef20d21a8723d
+75	6915	1575143081	ptnsim@exe/src_graphics_Shader.cpp.o	4fa9f9c3943f50f7
+75	8133	1575143082	ptnsim@exe/src_Renderer.cpp.o	500caa6e305cdd08
+76	8301	1575143082	ptnsim@exe/src_Simulator.cpp.o	d3f3fe60507e2ed0
+59	9116	1575143083	ptnsim@exe/src_main.cpp.o	88a38527079f5a61
+9122	11956	1575143086	ptnsim	872fb96edba47ef8
