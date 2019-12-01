@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
      */
     public void startConnect() {
         if (!client.isBluetoothEnabled())
-            client.enableBt(this);
+            client.enableBluetooth(this);
         else
             client.connect(PreferenceManager.getDefaultSharedPreferences(this).getString("bluetooth_host", "Pythonator"));
     }
@@ -275,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             case R.id.main_menu_bluetooth:
                 if (!client.isConnected()) {
                     if (!client.isBluetoothEnabled()) {
-                        client.enableBt(this);
+                        client.enableBluetooth(this);
                     } else {
                         startConnect();
                     }
@@ -326,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 image_edit_handler = null;
                 break;
         }
-        client.enableBtResult(requestCode, resultCode);
+        client.enableBluetoothResult(requestCode, resultCode);
     }
 
     @Override
@@ -381,8 +381,8 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     }
 
     @Override
-    public void connectStatus(ConnectState state) {
-        switch (state) {
+    public void onConnectStateChange(ConnectState new_state) {
+        switch (new_state) {
             case CONNECTING:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
                 break;

@@ -19,6 +19,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Class to handle sending images to the server, and to keep track of ordering of sent items
+ * Follows producer-consumer principles
+ */
 public class BtSender {
 
     // In the queue below, we store all images we want to send
@@ -38,6 +42,7 @@ public class BtSender {
         orderqueue = new ConcurrentLinkedQueue<>();
         service = Executors.newSingleThreadScheduledExecutor();
         this.application_context = application_context;
+        
     }
 
     /**
@@ -45,11 +50,10 @@ public class BtSender {
      */
     public synchronized void start(@NonNull BluetoothSocket socket) {
         service.scheduleAtFixedRate(() -> {
-            ImageQueueItem item = queue.poll();
-            if (item != null) {
+            while (!queue.isEmpty()) {
+                ImageQueueItem item = queue.poll();
                 Log.i("BtS", "Found an image in queue!");
                 int retries = PreferenceManager.getDefaultSharedPreferences(application_context).getInt("retries", 4);
-                item.setState(ImageState.SENDING);
                 for (int i = 0; i < retries; ++i) {
                     try {
                         Log.i("BtS", "Sending image... retry "+(i+1)+"/"+retries);
@@ -82,6 +86,7 @@ public class BtSender {
      */
     public synchronized void sendImage(@NonNull ImageQueueItem item) {
         queue.add(item);
+        item.setState(ImageState.SENDING);
     }
 
     /**

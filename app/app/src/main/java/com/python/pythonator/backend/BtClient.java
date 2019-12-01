@@ -19,8 +19,13 @@ import me.aflak.bluetooth.interfaces.BluetoothCallback;
 import me.aflak.bluetooth.interfaces.DeviceCallback;
 import me.aflak.bluetooth.interfaces.DiscoveryCallback;
 
+/**
+ * Client to handle bluetooth connections
+ */
 public class BtClient implements DeviceCallback, BluetoothCallback {
 
+    // Below we see a classic instance creator pattern. We assure in this way that there will be
+    // exactly one BtClient instance at runtime
     private static volatile BtClient INSTANCE;
 
     public static BtClient getClient(Context application_context) {
@@ -33,9 +38,13 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         return INSTANCE;
     }
 
+    // Bluetooth main interacter
     private Bluetooth bluetooth;
+    // Connection listener, to receive connection state update
     private ConnectListener c_listener;
+    // Bluetooth listener, to receive bluetooth state updates
     private BluetoothListener bt_listener;
+    // Sender object, to handle sending our items
     private BtSender bt_sender;
 
     private BtClient(Context application_context) {
@@ -46,14 +55,26 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     }
 
 
+    /**
+     * Sets a {@link ConnectListener} to receive connection state updates
+     * @param listener Listener to receive connection state updates
+     */
     public void setConnectListener(ConnectListener listener) {
         c_listener = listener;
     }
 
+    /**
+     * Sets a {@link BluetoothListener} to receive bluetooth state updates
+     * @param listener Listener to receive bluetooth state updates
+     */
     public void setBluetoothListener(BluetoothListener listener) {
         bt_listener = listener;
     }
 
+    /**
+     * Try to connect to a given device
+     * @param devicename Devicename to connect to
+     */
     public synchronized void connect(String devicename) {
         if (bluetooth.isConnected())
             bluetooth.disconnect();
@@ -62,13 +83,13 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
             @Override
             public void onDiscoveryStarted() {
                 if (c_listener != null)
-                    c_listener.connectStatus(ConnectState.CONNECTING);
+                    c_listener.onConnectStateChange(ConnectState.CONNECTING);
             }
 
             @Override
             public void onDiscoveryFinished() {
                 if (c_listener != null)
-                    c_listener.connectStatus(ConnectState.NOT_FOUND);
+                    c_listener.onConnectStateChange(ConnectState.NOT_FOUND);
             }
 
             @Override
@@ -86,7 +107,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
             @Override
             public void onError(int errorCode) {
                 if (c_listener != null)
-                    c_listener.connectStatus(ConnectState.ERROR);
+                    c_listener.onConnectStateChange(ConnectState.ERROR);
             }
 
             @Override
@@ -97,31 +118,70 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         bluetooth.startScanning();
     }
 
+    /**
+     * @return <code>true</code> if bluetooth is enabled, <code>false</code> otherwise
+     */
     public boolean isBluetoothEnabled() {
         return bluetooth.isEnabled();
     }
 
-    public synchronized void enableBt(Activity caller) {
+    /**
+     * Requests the user to enable bluetooth. Let the caller Activity send its onActivityResult calls
+     * to {@link #enableBluetoothResult(int, int)} for further processing
+     * @param caller Activity to dispaly request to the user
+     */
+    public synchronized void enableBluetooth(Activity caller) {
         bluetooth.showEnableDialog(caller);
     }
-    public void enableBtResult(int req, int res) {
+
+    /**
+     * Send Activity onActivityResult calls from any Activity calling {@link #enableBluetooth(Activity)}
+     * to this place, to handle result from {@link #enableBluetooth(Activity)} calls
+     * @param req
+     * @param res
+     */
+    public void enableBluetoothResult(int req, int res) {
         bluetooth.onActivityResult(req, res);
     }
+
+    /**
+     * Let UI onStart function call this function
+     */
     public void onStart() {
         bluetooth.onStart();
     }
+
+    /**
+     * Let UI onStop function call this function
+     */
     public void onStop() {
         bluetooth.onStop();
     }
+
+    /**
+     * @return <code>true</code> if we are currently connected to a device, <code>false</code> otherwise
+     */
     public boolean isConnected() {
         return bluetooth.isConnected();
+    }
+
+    /**
+     * Send an image over bluetooth to the connected server
+     * @param item Image to send to server
+     * @return <code>false</code> if we are not connected to a device, <code>true</code> otherwise
+     */
+    public synchronized boolean sendImage(@NonNull ImageQueueItem item) {
+        if (!isConnected())
+            return false;
+        bt_sender.sendImage(item);
+        return true;
     }
 
     @Override
     public void onDeviceConnected(BluetoothDevice device) {
         Log.i("BtC", "Connection established");
         if (c_listener != null)
-            c_listener.connectStatus(ConnectState.CONNECTED);
+            c_listener.onConnectStateChange(ConnectState.CONNECTED);
         bt_sender.start(bluetooth.getSocket());
     }
 
@@ -163,7 +223,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     public void onBluetoothTurningOff() {
         bt_sender.stop();
         if (c_listener != null)
-            c_listener.connectStatus(ConnectState.DISCONNECTED);
+            c_listener.onConnectStateChange(ConnectState.DISCONNECTED);
     }
 
     @Override
@@ -174,53 +234,4 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         if (bt_listener != null)
             bt_listener.onUserDeniedActivation();
     }
-
-//    public static byte[] longToBytes(long l) {
-//        byte[] result = new byte[8];
-//        for (int i = 7; i >= 0; i--) {
-//            result[i] = (byte)(l & 0xFF);
-//            l >>= 8;
-//        }
-//        return result;
-//    }
-//    public static long bytesToLong(byte[] b) {
-//        long result = 0;
-//        for (int i = 0; i < 8; i++) {
-//            result <<= 8;
-//            result |= (b[i] & 0xFF);
-//        }
-//        return result;
-//    }
-
-    public synchronized boolean sendImage(@NonNull ImageQueueItem item) {
-        if (!isConnected())
-            return false;
-        bt_sender.sendImage(item);
-        return true;
-    }
-//    private Notification createNotification() {
-//        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//        assert notificationManager != null;
-//        String channel_id = "Python channel";
-//        NotificationChannel channel = new NotificationChannel(channel_id, "Python channel", NotificationManager.IMPORTANCE_HIGH);
-//            channel.setDescription("Python service running");
-//            channel.enableLights(true);
-//            channel.setLightColor(android.graphics.Color.rgb(102, 245, 66));
-//            channel.enableVibration(true);
-//            channel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
-//
-//        notificationManager.createNotificationChannel(channel);
-//
-//        Intent notificationIntent = new Intent(this, MainActivity.class);
-//        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//
-//        Notification.Builder b =  new Notification.Builder(this, channel_id);
-//        return b.setContentTitle("Python service running")
-//                .setContentText("Keeping bluetooth active")
-//                .setContentIntent(pendingIntent)
-//                .setSmallIcon(R.mipmap.ic_launcher)
-//                .setTicker("Ticker text")
-//                .build();
-//    }
 }
