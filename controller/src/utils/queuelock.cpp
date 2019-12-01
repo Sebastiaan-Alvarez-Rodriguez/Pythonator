@@ -5,7 +5,7 @@
 QueueLock::QueueLock() {}
 
 void QueueLock::lock() {
-    std::unique_lock lck(this->mutex);
+    std::unique_lock<std::mutex> lck(this->mutex);
 
     auto id = std::this_thread::get_id();
 
@@ -17,7 +17,7 @@ void QueueLock::lock() {
 }
 
 void QueueLock::unlock() {
-    std::unique_lock lck(this->mutex);
+    std::unique_lock<std::mutex> lck(this->mutex);
     this->thread_queue.pop();
     lck.unlock();
     this->cv.notify_all();
