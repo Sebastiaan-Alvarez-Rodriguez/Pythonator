@@ -100,6 +100,11 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        client.onDestroy();
+        super.onDestroy();
+    }
     /**
      * Finds all interesting views we need to control
      */

@@ -159,6 +159,13 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     }
 
     /**
+     * Let UI onDestroy function call this function, to properly stop Bluetooth transmissions
+     */
+    public void onDestroy() {
+        bt_sender.stop();
+    }
+
+    /**
      * @return <code>true</code> if we are currently connected to a device, <code>false</code> otherwise
      */
     public boolean isConnected() {
@@ -182,13 +189,12 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         Log.i("BtC", "Connection established");
         if (c_listener != null)
             c_listener.onConnectStateChange(ConnectState.CONNECTED);
-        bt_sender.start(bluetooth.getSocket());
+        bt_sender.updateSocket(bluetooth.getSocket());
     }
 
     @Override
     public void onDeviceDisconnected(BluetoothDevice device, String message) {
         Log.i("BtC", "Disconnected!");
-        bt_sender.stop();
     }
 
     @Override

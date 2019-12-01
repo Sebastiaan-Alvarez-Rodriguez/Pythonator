@@ -37,24 +37,30 @@ public class BtSender {
     // We need this context to check out how many retries we have, each time we send an item
     private Context application_context;
 
+    private BluetoothSocket socket;
+
     public BtSender(Context application_context) {
         queue = new ConcurrentLinkedQueue<>();
         orderqueue = new ConcurrentLinkedQueue<>();
         service = Executors.newSingleThreadScheduledExecutor();
         this.application_context = application_context;
-        
+        socket = null;
+        start();
     }
 
+    public synchronized void updateSocket(@NonNull BluetoothSocket socket) {
+        this.socket = socket;
+    }
     /**
      * Start the consumer thread, which handles sending
      */
-    public synchronized void start(@NonNull BluetoothSocket socket) {
+    private void start() {
         service.scheduleAtFixedRate(() -> {
-            while (!queue.isEmpty()) {
+            while (socket != null && socket.isConnected() && !queue.isEmpty()) {
                 ImageQueueItem item = queue.poll();
                 Log.i("BtS", "Found an image in queue!");
                 int retries = PreferenceManager.getDefaultSharedPreferences(application_context).getInt("retries", 4);
-                for (int i = 0; i < retries; ++i) {
+                for (int i = 0; i < retries && socket.isConnected(); ++i) {
                     try {
                         Log.i("BtS", "Sending image... retry "+(i+1)+"/"+retries);
                         Image image = item.get();
@@ -63,6 +69,7 @@ public class BtSender {
                         out.writeLong((long) to_send.length);
                         out.write(image.getBitmapBytes());
                         item.setState(ImageState.SENT);
+                        Log.i("BtS", "Image sent! (success on retry "+(i+1)+"/"+retries+")");
                         orderqueue.add(item);
                         return;
                     } catch (Exception ignored) {}
@@ -71,6 +78,7 @@ public class BtSender {
                 item.setState(ImageState.NOT_SENT);
             }
         }, 0, 5, TimeUnit.SECONDS);
+        Log.i("BtS", "Bluetooth sender started");
     }
 
     /**
@@ -78,6 +86,7 @@ public class BtSender {
      */
     public synchronized void stop() {
         service.shutdown();
+        Log.i("BtS", "Bluetooth sender stopped");
     }
 
     /**
