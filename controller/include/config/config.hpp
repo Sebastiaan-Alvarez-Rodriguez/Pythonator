@@ -25,6 +25,7 @@ class Config
         const ConfigValue* operator[](const std::string&) const;
         const ConfigValue* get(const std::string&) const;
         void put(const std::string&, ConfigValue*);
+        const ConfigValue* putIfNew(const std::string&, ConfigValue*);
         bool contains(const std::string&) const;
 
         inline iterator begin()

@@ -20,7 +20,7 @@ class ImageProcessor {
         ImageProcessor(uint8_t*, size_t);
         ~ImageProcessor();
 
-        void transform();
+        void transform(size_t, size_t);
 
         inline const std::vector<std::pair<Coord, Coord>>& getData() const {
             return this->result_data;

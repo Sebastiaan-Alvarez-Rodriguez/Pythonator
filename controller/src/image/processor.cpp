@@ -21,7 +21,9 @@ cv::Mat ImageProcessor::edgeDetect(double blur_sigma, int low, int high, int ker
     return result;
 }
 
-void ImageProcessor::transform() {
+void ImageProcessor::transform(size_t target_width, size_t target_height) {
+    cv::resize(this->image, this->image, cv::Size(target_width, target_height));
+
     //Canny edge detection, TODO: figure out parameters
     cv::Mat edge_mapping = this->edgeDetect(3.5, 2000, 14000, 7);
 

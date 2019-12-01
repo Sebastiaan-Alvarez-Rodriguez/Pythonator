@@ -7,7 +7,7 @@
 #include <string>
 #include <memory>
 
-#include "config/except.hpp"
+#include "error/exceptions.hpp"
 #include "config/config.hpp"
 
 class ConfigParser

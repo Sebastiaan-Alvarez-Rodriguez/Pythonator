@@ -4,13 +4,14 @@
 #include <vector>
 #include <memory>
 #include <termios.h>
+#include <string>
 
 #include "bot/command.hpp"
 #include "bot/device.hpp"
 
 struct BotInfo {
-    const char* device_name;
-    speed_t boud_rate;
+    std::string device_name;
+    speed_t baud_rate;
 };
 
 class BotController : public BotDevice {

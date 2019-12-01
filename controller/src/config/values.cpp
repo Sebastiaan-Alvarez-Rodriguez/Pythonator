@@ -1,5 +1,5 @@
 #include "config/values.hpp"
-#include "config/except.hpp"
+#include "error/exceptions.hpp"
 
 std::string ConfigValue::getString() const
 {

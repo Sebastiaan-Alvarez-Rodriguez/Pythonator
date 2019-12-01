@@ -13,6 +13,32 @@ class ProgramException : public std::runtime_error
         virtual ~ProgramException() = default;
 };
 
+class ConfigException : public ProgramException
+{
+    public:
+        template <typename... T>
+        ConfigException(const T&... args) : ProgramException(args...) {}
+        ConfigException(size_t, const char*);
+        ConfigException(size_t, const std::string&);
+        virtual ~ConfigException() = default;
+};
+
+class IllegalConfigException : public ConfigException
+{
+    public:
+        template <typename... T>
+        IllegalConfigException(const T&... args) : ConfigException(args...) {}
+        virtual ~IllegalConfigException() = default;
+};
+
+class NoConfigFoundException : public ConfigException
+{
+    public:
+        template <typename... T>
+        NoConfigFoundException(const T&... args) : ConfigException(args...) {}
+        virtual ~NoConfigFoundException() = default;
+};
+
 class BluetoothException : public ProgramException {
     public:
         template <typename... T>

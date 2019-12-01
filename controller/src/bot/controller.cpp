@@ -9,7 +9,7 @@
 #include <cstring>
 
 BotController::BotController(const BotInfo& bot_device) {
-    this->usb_port = open(bot_device.device_name, O_RDWR | O_NOCTTY);
+    this->usb_port = open(bot_device.device_name.c_str(), O_RDWR | O_NOCTTY);
     if(this->usb_port == -1)
         throw USBException("Failed to open bot device");
 
@@ -24,8 +24,8 @@ BotController::BotController(const BotInfo& bot_device) {
     }
 
     tty = tty_old;
-    cfsetospeed(&tty, bot_device.boud_rate);
-    cfsetispeed(&tty, bot_device.boud_rate);
+    cfsetospeed(&tty, bot_device.baud_rate);
+    cfsetispeed(&tty, bot_device.baud_rate);
 
     //Turn of input processing
     tty.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
@@ -61,6 +61,7 @@ BotStatus BotController::printCommand(const std::unique_ptr<BotCommand>& command
     command->write(command_buffer);
 
     ssize_t result = write(this->usb_port, command_buffer, command_size);
+    delete[] command_buffer;
     if(result < 0 || (size_t)result != command_size)
         return BotStatus::IO_ERROR;
 

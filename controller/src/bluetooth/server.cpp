@@ -18,7 +18,8 @@ bdaddr_t _bd_addr_any = {{0, 0, 0, 0, 0, 0}};
 #define BDADDR_ANY (&_bd_addr_any)
 #endif
 
-BluetoothServer::BluetoothServer(BotDevice& bot_controller) : bot_controller(bot_controller) {
+BluetoothServer::BluetoothServer(BotDevice& bot_controller, size_t channel, size_t canvas_width, size_t canvas_height)
+                    : bot_controller(bot_controller), canvas_width(canvas_width), canvas_height(canvas_height) {
     std::memset(&this->address, 0, sizeof(this->address));
     this->socket = ::socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
     if(this->socket == -1)
@@ -26,7 +27,7 @@ BluetoothServer::BluetoothServer(BotDevice& bot_controller) : bot_controller(bot
 
     //Bind to channel 1
     this->address.rc_family = AF_BLUETOOTH;
-    this->address.rc_channel = 1;
+    this->address.rc_channel = channel;
     bacpy(&this->address.rc_bdaddr, BDADDR_ANY);
 
     if(::bind(this->socket, (struct sockaddr*)&this->address, sizeof(this->address)))
@@ -72,11 +73,19 @@ void BluetoothServer::handle(int socket, struct sockaddr_rc remote_addr) {
                 throw BluetoothException("Failed to receive image");
 
             ImageProcessor processor(data.get(), image_size);
-            processor.transform();
+            processor.transform(this->canvas_width, this->canvas_height);
 
-            uint8_t status = (uint8_t)this->bot_controller.writeLines(processor.getData());
-            if(::send(socket, &status, sizeof(status), 0) != sizeof(uint8_t))
-                throw BluetoothException("Failed to send result status code");
+            //Acquire exclusive access to the bot
+            this->queue_lock.lock();
+            try {
+                uint8_t status = (uint8_t)this->bot_controller.writeLines(processor.getData());
+                if(::send(socket, &status, sizeof(status), 0) != sizeof(uint8_t))
+                    throw BluetoothException("Failed to send result status code");
+            }
+            catch(...) {
+                this->queue_lock.unlock();
+                throw;
+            }
         } while(true);
     }
     catch(const std::runtime_error& except) {

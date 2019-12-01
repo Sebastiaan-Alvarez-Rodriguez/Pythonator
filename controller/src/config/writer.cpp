@@ -1,5 +1,5 @@
 #include "config/writer.hpp"
-#include "config/except.hpp"
+#include "error/exceptions.hpp"
 #include "config/config.hpp"
 
 ConfigWriter::ConfigWriter(const std::string& output) : output(std::ofstream(output))
