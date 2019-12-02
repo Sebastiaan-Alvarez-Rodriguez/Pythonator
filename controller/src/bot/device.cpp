@@ -1,4 +1,5 @@
 #include "bot/device.hpp"
+#include "error/logging.hpp"
 
 void BotDevice::appendPath(std::vector<std::unique_ptr<BotCommand>>& commands, const std::vector<std::pair<Coord, Coord>>& line_list) {
     bool drawing = false;
@@ -40,6 +41,7 @@ BotStatus BotDevice::writeLines(const std::vector<std::pair<Coord, Coord>>& line
 }
 
 BotStatus BotDevice::printCommands(std::vector<std::unique_ptr<BotCommand>>& commands) {
+    log_info("Sending %llu commands to bot", (unsigned long long)commands.size());
     for(auto& it : commands) {
         BotStatus result = this->printCommand(it);
         if(result != BotStatus::SUCCESS) {

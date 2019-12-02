@@ -18,6 +18,19 @@ bdaddr_t _bd_addr_any = {{0, 0, 0, 0, 0, 0}};
 #define BDADDR_ANY (&_bd_addr_any)
 #endif
 
+//Utility function
+ssize_t receiveFully(int socket, void* buffer, size_t buffer_size) {
+    size_t result = 0;
+
+    while(result < buffer_size) {
+        ssize_t temp = ::recv(socket, (char*)buffer + result, buffer_size - result, 0);
+        if(temp < 0)
+            return temp;
+        result += temp;
+    }
+    return result;
+}
+
 BluetoothServer::BluetoothServer(BotDevice& bot_controller, size_t channel, size_t canvas_width, size_t canvas_height)
                     : bot_controller(bot_controller), canvas_width(canvas_width), canvas_height(canvas_height) {
     std::memset(&this->address, 0, sizeof(this->address));
@@ -66,18 +79,27 @@ void BluetoothServer::handle(int socket, struct sockaddr_rc remote_addr) {
 
             if(image_size == 0)
                 break;
+            log_info("Received image request for image with size: %llu from %06X", (long long unsigned)image_size, remote_addr.rc_bdaddr);
+
 
             std::unique_ptr<uint8_t[]> data(new uint8_t[image_size]);
-            ssize_t result = ::recv(socket, data.get(), image_size, 0);
+            ssize_t result = receiveFully(socket, data.get(), image_size);
             if(result == -1 || (size_t)result != image_size)
-                throw BluetoothException("Failed to receive image");
+                throw BluetoothException("Failed to receive image, returned status: ", result);
+
+            log_info("Received image from %06X", remote_addr.rc_bdaddr);
 
             ImageProcessor processor(data.get(), image_size);
             processor.transform(this->canvas_width, this->canvas_height);
+            log_info("Finished transformation of image for %06X", remote_addr.rc_bdaddr);
+
+            processor.optimize();
+            log_info("Finished routing optimization of image for %06X", remote_addr.rc_bdaddr);
 
             //Acquire exclusive access to the bot
             this->queue_lock.lock();
             try {
+                log_info("Writing result of client %06X to bot", remote_addr.rc_bdaddr);
                 uint8_t status = (uint8_t)this->bot_controller.writeLines(processor.getData());
                 if(::send(socket, &status, sizeof(status), 0) != sizeof(uint8_t))
                     throw BluetoothException("Failed to send result status code");
@@ -86,10 +108,18 @@ void BluetoothServer::handle(int socket, struct sockaddr_rc remote_addr) {
                 this->queue_lock.unlock();
                 throw;
             }
+
+            log_info("Finished handling request for %06X", remote_addr.rc_bdaddr);
         } while(true);
     }
+    catch(const cv::Exception& except) {
+        log_warning("OpenCV exception during handling of request: %s", except.what());
+    }
+    catch(const std::bad_alloc& alloc) {
+        log_warning("Allocation failed when handling request: %s", alloc.what());
+    }
     catch(const std::runtime_error& except) {
-        log_warning("Failed to process socket request: %s\n", except.what());
+        log_warning("Failed to process socket request: %s", except.what());
     }
     close(socket);
 }

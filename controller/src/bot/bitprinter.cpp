@@ -10,6 +10,7 @@ BotStatus BotBitPrinter::printCommand(const std::unique_ptr<BotCommand>& command
     command->write(command_buffer);
 
     this->output.write((const char*)command_buffer, command_size);
+    this->output.flush();
 
     delete[] command_buffer;
     return BotStatus::SUCCESS;

@@ -76,7 +76,7 @@ BotConfigInfo parse_bot_bitprinter_config(Config& config, size_t width, size_t h
     std::string file_name = config.putIfNew("bot.bitprinter.output_file", new ConfigString("/dev/stdout"))->getString();
     std::ofstream* new_file = new std::ofstream(file_name);
     size_t canvas_width = config.putIfNew("bot.bitprinter.canvas_width", new ConfigInteger(width))->getInteger();
-    size_t canvas_height = config.putIfNew("bot.bitprinter.canvas_width", new ConfigInteger(height))->getInteger();
+    size_t canvas_height = config.putIfNew("bot.bitprinter.canvas_height", new ConfigInteger(height))->getInteger();
     return BotConfigInfo{new BotBitPrinter(*new_file), new_file, canvas_width, canvas_height};
 }
 
@@ -84,7 +84,7 @@ BotConfigInfo parse_bot_textprinter_config(Config& config, size_t width, size_t 
     std::string file_name = config.putIfNew("bot.textprinter.output_file", new ConfigString("/dev/stdout"))->getString();
     std::ofstream* new_file = new std::ofstream(file_name);
     size_t canvas_width = config.putIfNew("bot.textprinter.canvas_width", new ConfigInteger(width))->getInteger();
-    size_t canvas_height = config.putIfNew("bot.textprinter.canvas_width", new ConfigInteger(height))->getInteger();
+    size_t canvas_height = config.putIfNew("bot.textprinter.canvas_height", new ConfigInteger(height))->getInteger();
     return BotConfigInfo{new BotPrinter(*new_file), new_file, canvas_width, canvas_height};
 }
 
