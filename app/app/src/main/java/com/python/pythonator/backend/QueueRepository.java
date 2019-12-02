@@ -1,5 +1,7 @@
 package com.python.pythonator.backend;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -15,19 +17,22 @@ import java.util.concurrent.Executors;
 
 /**
  * Repository class for our data.
- * Officially, we should keep the bluetooth client here, and make calls from the repository to it.
+ * Officially, we should keep all calls to the bluetooth client here, and make calls from the repository to it.
  * However, this would result in a lot of call-through functions, because handling bluetooth connections
  * is handled in UI only.
  * Therefore, we migrated bluetooth connection handling to a separate object,
- * with which the UI can interact directly
+ * and provide access to the UI directly
  */
 public class QueueRepository {
+
+    private BtClient client;
 
     // The interesting data of this application: The images a user selected
     private MutableLiveData<List<ImageQueueItem>> queue;
 
-    public QueueRepository() {
+    public QueueRepository(Context application_context) {
         queue = new MutableLiveData<>();
+        client = new BtClient(application_context);
     }
 
     /**
@@ -87,5 +92,12 @@ public class QueueRepository {
            list.set(index, imageNew);
            queue.postValue(list);
         });
+    }
+
+    /**
+     * @return client instance
+     */
+    public @NonNull BtClient getClient() {
+        return client;
     }
 }

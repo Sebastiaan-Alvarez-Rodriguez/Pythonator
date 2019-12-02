@@ -83,9 +83,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         setupButtons();
         setupList();
         setupActionBar();
-        client = BtClient.getClient(getApplicationContext());
+        client = model.getClient();
         client.setConnectListener(this);
         client.setBluetoothListener(this);
+        client.setErrorListener(this);
         if (!checkPermissionBluetooth())
             askPermissionBluetooth();
     }

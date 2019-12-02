@@ -24,22 +24,8 @@ import me.aflak.bluetooth.interfaces.DiscoveryCallback;
 /**
  * Client to handle bluetooth connections
  */
+@SuppressWarnings("WeakerAccess")
 public class BtClient implements DeviceCallback, BluetoothCallback {
-
-    // Below we see a classic instance creator pattern. We assure in this way that there will be
-    // exactly one BtClient instance at runtime
-    private static volatile BtClient INSTANCE;
-
-    public static BtClient getClient(Context application_context) {
-        if (INSTANCE == null) {
-            synchronized (BtClient.class) {
-                if (INSTANCE == null)
-                    INSTANCE = new BtClient(application_context);
-            }
-        }
-        return INSTANCE;
-    }
-
     // Bluetooth main interacter
     private Bluetooth bluetooth;
     // Connection listener, to receive connection state update
@@ -52,7 +38,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     // Sender object, to handle sending our items
     private BtSender bt_sender;
 
-    private BtClient(Context application_context) {
+    public BtClient(@NonNull Context application_context) {
         this.bluetooth = new Bluetooth(application_context);
         bt_sender = new BtSender(application_context);
         bluetooth.setDeviceCallback(this);
@@ -148,8 +134,8 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     /**
      * Send Activity onActivityResult calls from any Activity calling {@link #enableBluetooth(Activity)}
      * to this place, to handle result from {@link #enableBluetooth(Activity)} calls
-     * @param req
-     * @param res
+     * @param req Requestcode as received by onActivityResult
+     * @param res Resultcode as received by onActivityResult
      */
     public void enableBluetoothResult(int req, int res) {
         bluetooth.onActivityResult(req, res);

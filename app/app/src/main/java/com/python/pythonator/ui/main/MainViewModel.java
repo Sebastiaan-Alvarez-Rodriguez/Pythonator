@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
+import com.python.pythonator.backend.BtClient;
 import com.python.pythonator.backend.QueueRepository;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 
@@ -17,15 +18,19 @@ import java.util.List;
  * Handles retaining important information between lifecycle events, and to expose our repository
  * @see AndroidViewModel
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class MainViewModel extends AndroidViewModel {
     // Cached variant of repository images
     private LiveData<List<ImageQueueItem>> cache = null;
     // Our repository
     private QueueRepository repository;
+    // Reference to the client, for the UI to interact with
+    private @NonNull BtClient ref;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
-        repository = new QueueRepository();
+        repository = new QueueRepository(application.getApplicationContext());
+        ref = repository.getClient();
     }
 
     /**
@@ -76,5 +81,12 @@ public class MainViewModel extends AndroidViewModel {
      */
     public void replaceQueueItem(@NonNull ImageQueueItem oldImage, @NonNull ImageQueueItem newImage) {
             repository.replaceQueueItem(oldImage, newImage);
+    }
+
+    /**
+     * @return Client reference for the UI to interact with
+     */
+    public @NonNull BtClient getClient() {
+        return ref;
     }
 }
