@@ -11,6 +11,8 @@ import com.python.pythonator.backend.connection.BluetoothListener;
 import com.python.pythonator.backend.connection.ConnectListener;
 import com.python.pythonator.backend.connection.ConnectState;
 import com.python.pythonator.backend.transfer.BtSender;
+import com.python.pythonator.backend.transfer.ErrorListener;
+import com.python.pythonator.backend.transfer.ErrorType;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.structures.queue.ImageState;
 
@@ -44,6 +46,9 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     private ConnectListener c_listener;
     // Bluetooth listener, to receive bluetooth state updates
     private BluetoothListener bt_listener;
+    // Error listener, to receive updates when the server sends error code responses
+    private ErrorListener er_listener;
+
     // Sender object, to handle sending our items
     private BtSender bt_sender;
 
@@ -52,6 +57,9 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         bt_sender = new BtSender(application_context);
         bluetooth.setDeviceCallback(this);
         bluetooth.setBluetoothCallback(this);
+        c_listener = null;
+        bt_listener = null;
+        er_listener = null;
     }
 
 
@@ -71,6 +79,9 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
         bt_listener = listener;
     }
 
+    public void setErrorListener(ErrorListener listener) {
+        er_listener = listener;
+    }
     /**
      * Try to connect to a given device
      * @param devicename Devicename to connect to
@@ -168,6 +179,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     /**
      * @return <code>true</code> if we are currently connected to a device, <code>false</code> otherwise
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isConnected() {
         return bluetooth.isConnected();
     }
@@ -200,13 +212,23 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
     @Override
     public void onMessage(byte[] message) {
         Log.i("BtC", "We received a message...");
+        ImageQueueItem first_sent = bt_sender.getFirstSent();
         if (message[0] == 0) {
             Log.i("BtC", "\tAnd it was from the server, since message[0] == 0x00");
-            ImageQueueItem first_sent = bt_sender.getFirstSent();
             if (first_sent != null)
                 first_sent.setState(ImageState.DRAWN);
         } else {
-            Log.w("BtC", "\tBut it was not from the server, since message[0] != 0x00");
+            if (first_sent != null)
+                first_sent.setState(ImageState.NOT_SENT);
+            if (er_listener != null)
+                switch (message[0]) {
+                    case 1: er_listener.onError(ErrorType.OUT_OF_BOUNDS); break;
+                    case 2: er_listener.onError(ErrorType.UNKNOWN_COMMAND); break;
+                    case 3: default:
+                    er_listener.onError(ErrorType.IO_ERROR); break;
+                }
+
+            Log.w("BtC", "\tServer failure (message != 0x00");
         }
     }
 

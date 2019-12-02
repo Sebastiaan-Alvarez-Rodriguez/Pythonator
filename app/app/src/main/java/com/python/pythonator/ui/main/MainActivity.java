@@ -28,6 +28,8 @@ import com.python.pythonator.backend.BtClient;
 import com.python.pythonator.backend.connection.BluetoothListener;
 import com.python.pythonator.backend.connection.ConnectListener;
 import com.python.pythonator.backend.connection.ConnectState;
+import com.python.pythonator.backend.transfer.ErrorListener;
+import com.python.pythonator.backend.transfer.ErrorType;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.structures.queue.ImageState;
 import com.python.pythonator.ui.camera.CameraHandler;
@@ -44,7 +46,7 @@ import java.util.Collections;
 /**
  * Simple class to fetch images, edit them, and send them to the server over bluetooth
  */
-public class MainActivity extends AppCompatActivity implements ConnectListener, BluetoothListener, AdapterListener, QueueImageClickListener {
+public class MainActivity extends AppCompatActivity implements ConnectListener, BluetoothListener, ErrorListener, AdapterListener, QueueImageClickListener {
 
     private static final int
             REQUEST_BLUETOOTH_PERMISSION = 0,
@@ -414,5 +416,18 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             .setAction("Try again", v -> startConnect())
             .show()
         );
+    }
+
+    @Override
+    public void onError(ErrorType error) {
+        runOnUiThread(() -> {
+            String text = "There was an error: ";
+            switch (error) {
+                case OUT_OF_BOUNDS: text += "Drawn object would be out of bounds"; break;
+                case UNKNOWN_COMMAND: text += "Server does not recognize command"; break;
+                case IO_ERROR: text += "There was an IO error"; break;
+            }
+            Snackbar.make(view, text, Snackbar.LENGTH_LONG).show();
+        });
     }
 }
