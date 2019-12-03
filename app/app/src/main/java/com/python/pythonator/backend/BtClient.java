@@ -93,7 +93,7 @@ public class BtClient implements DeviceCallback, BluetoothCallback {
             public void onDeviceFound(BluetoothDevice device) {
                 if (device == null || device.getName() == null)
                     return;
-                Log.i("BtC", "Found device: "+device.getName());
+                Log.i("BtC", "Found device: "+device.getName() +"... Is device ours: "+devicename);
                 if (devicename.equals(device.getName())) {
                     bluetooth.stopScanning();
                     Log.i("BtC", "Target found!");

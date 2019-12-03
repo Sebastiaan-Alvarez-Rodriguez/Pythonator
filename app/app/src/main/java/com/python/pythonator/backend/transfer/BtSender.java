@@ -8,11 +8,11 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.common.io.LittleEndianDataOutputStream;
 import com.python.pythonator.structures.Image;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.structures.queue.ImageState;
 
-import java.io.DataOutputStream;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -60,12 +60,29 @@ public class BtSender {
                 ImageQueueItem item = queue.poll();
                 Log.i("BtS", "Found an image in queue!");
                 int retries = PreferenceManager.getDefaultSharedPreferences(application_context).getInt("retries", 4);
+                Image image = item.get();
+                LittleEndianDataOutputStream out = null;
+                for (int i = 0; i < retries; ++i) {
+                    try {
+                        out = new LittleEndianDataOutputStream(socket.getOutputStream());
+                    } catch (Exception ignored) {
+                        try {
+                            Thread.sleep(1000);
+                        } catch (Exception ignored2){}
+                    }
+                }
+                if (out == null) {
+                    Log.i("BtS", "Failed to send image, no connection ("+retries+" retries");
+                    item.setState(ImageState.NOT_SENT);
+                    return;
+                }
+                byte[] to_send = image.getBitmapBytes();
+
                 for (int i = 0; i < retries && socket.isConnected(); ++i) {
                     try {
                         Log.i("BtS", "Sending image... retry "+(i+1)+"/"+retries);
-                        Image image = item.get();
-                        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                        byte[] to_send = image.getBitmapBytes();
+
+                        Log.i("BtS", "I will send: "+((long)to_send.length)+ " bytes!");
                         out.writeLong((long) to_send.length);
                         out.write(image.getBitmapBytes());
                         item.setState(ImageState.SENT);
