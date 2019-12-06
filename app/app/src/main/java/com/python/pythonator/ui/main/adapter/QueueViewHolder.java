@@ -18,6 +18,7 @@ import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.ui.templates.adapter.InternalClickListener;
 import com.python.pythonator.ui.templates.adapter.viewholder.ViewHolder;
 
+@SuppressWarnings("WeakerAccess")
 public class QueueViewHolder extends ViewHolder<ImageQueueItem> {
     public static @LayoutRes final int layout_resource = R.layout.item_image;
     private ImageView thumbnail_view;
@@ -52,6 +53,9 @@ public class QueueViewHolder extends ViewHolder<ImageQueueItem> {
 
     @Override
     public void set(ImageQueueItem image) {
+        sending_overlay.setVisibility(View.INVISIBLE);
+        send_button.setVisibility(View.VISIBLE);
+        send_button.setBackgroundResource(android.R.drawable.ic_menu_send);
         image.setListener(new_state -> layout.post(() -> {
             switch (new_state) {
                 case SENDING:
