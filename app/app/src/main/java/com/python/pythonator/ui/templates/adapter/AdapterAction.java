@@ -13,6 +13,7 @@ import java.util.List;
  * Template specialization to allow for action modes, without Android's monstrosities
  * @param <T> The type of items in the list
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class AdapterAction<T> extends AdapterCheckable<T> {
     private boolean actionMode = false;
 

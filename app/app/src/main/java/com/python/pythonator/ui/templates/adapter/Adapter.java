@@ -167,4 +167,10 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
         remove(removed);
         add(added);
     }
+
+
+    @Override
+    public boolean allowItemDismiss(int position) {
+        return adapter_listener.allowSwipe(position);
+    }
 }

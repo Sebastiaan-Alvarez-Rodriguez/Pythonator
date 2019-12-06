@@ -99,12 +99,13 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     protected void onStop() {
-        client.onStop();
+
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
+        client.onStop();
         client.onDestroy();
         super.onDestroy();
     }
@@ -368,8 +369,13 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     @Override
     public void onSwiped(int pos) {
         ImageQueueItem item = adapter.get(pos);
-        if (item.getState() == ImageState.NOT_SENT || item.getState() == ImageState.DRAWN)
-            model.removeFromQueue(Collections.singletonList(item));
+        model.removeFromQueue(Collections.singletonList(item));
+    }
+
+    @Override
+    public boolean allowSwipe(int pos) {
+        ImageQueueItem item = adapter.get(pos);
+        return item.getState() != ImageState.SENDING;
     }
 
     @Override

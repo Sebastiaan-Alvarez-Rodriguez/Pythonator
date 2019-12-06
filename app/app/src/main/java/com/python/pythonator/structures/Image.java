@@ -11,6 +11,8 @@ import androidx.annotation.WorkerThread;
 import com.python.pythonator.ui.templates.ResultCallback;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
@@ -19,6 +21,7 @@ import static com.python.pythonator.util.FileUtil.getFileSize;
 /**
  * One of the most important classes of this project: Exposes (potentially huge) images to our application
  */
+@SuppressWarnings("unused")
 public class Image {
     private String abs_path;
     private String size;
@@ -27,7 +30,7 @@ public class Image {
     public Image(@NonNull String abs_path) {
         this.abs_path = abs_path;
         this.size = getFileSize(abs_path);
-        this.format = Bitmap.CompressFormat.PNG;
+        this.format = Bitmap.CompressFormat.JPEG;
     }
 
     /**
@@ -94,13 +97,26 @@ public class Image {
      * Execute this function in a thread: Image reading and oompression will otherwise hang UI
      * @return bytes of the bitmap
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @CheckResult
     @WorkerThread
     public byte[] getBitmapBytes() {
         Bitmap bitmap = BitmapFactory.decodeFile(abs_path);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        bitmap.compress(format, 100, os);
-        byte[] array = os.toByteArray();
+        byte[] array = null;
+        if (format == Bitmap.CompressFormat.JPEG && (abs_path.endsWith(".jpg") || abs_path.endsWith(".jpeg")) ||
+                format == Bitmap.CompressFormat.PNG && (abs_path.endsWith(".png"))) { //No compress if we already have the right type
+            try {
+                File f = new File(abs_path);
+                array = new byte[(int)f.length()];
+                FileInputStream fin = new FileInputStream(f);
+                fin.read(array);
+                fin.close();
+            } catch (Exception ignored) {}
+        } else {
+            bitmap.compress(format, 100, os);
+            array = os.toByteArray();
+        }
         try {
             os.close();
         } catch (IOException ignored) {}
