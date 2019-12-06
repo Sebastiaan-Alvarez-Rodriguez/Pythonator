@@ -2,12 +2,10 @@ package com.python.pythonator.ui.main;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +28,8 @@ import com.python.pythonator.backend.BtClient;
 import com.python.pythonator.backend.connection.BluetoothListener;
 import com.python.pythonator.backend.connection.ConnectListener;
 import com.python.pythonator.backend.connection.ConnectState;
+import com.python.pythonator.backend.transfer.ErrorListener;
+import com.python.pythonator.backend.transfer.ErrorType;
 import com.python.pythonator.structures.queue.ImageQueueItem;
 import com.python.pythonator.structures.queue.ImageState;
 import com.python.pythonator.ui.camera.CameraHandler;
@@ -42,30 +42,36 @@ import com.python.pythonator.util.FileUtil;
 
 import java.util.Collections;
 
-// Okay impl: https://stackoverflow.com/questions/49729452/how-to-keep-bluetooth-connection-background
-// library  : https://github.com/OmarAflak/Bluetooth-Library
-public class MainActivity extends AppCompatActivity implements ConnectListener, BluetoothListener, AdapterListener, QueueImageClickListener {
+
+/**
+ * Simple class to fetch images, edit them, and send them to the server over bluetooth
+ */
+public class MainActivity extends AppCompatActivity implements ConnectListener, BluetoothListener, ErrorListener, AdapterListener, QueueImageClickListener {
+
     private static final int
             REQUEST_BLUETOOTH_PERMISSION = 0,
             REQUEST_CAMERA_PERMISSION = 1,
             REQUEST_GALLERY_PERMISSION = 2,
             REQUEST_IMAGE_GALLERY = 3;
 
-    private View view;
 
-    private MenuItem bluetooth_search;
-
+    // These objects are critical to functionality. The adapter handles UI list, model handles queue, client handles bluetooth
     private BtClient client;
-
     private MainViewModel model;
     private QueueAdapter adapter;
 
+    // Below are all interesting UI components
     private RecyclerView queue_list;
     private FloatingActionButton queue_add, queue_camera, queue_gallery;
+    private View view;
+    private MenuItem bluetooth_search;
 
+    // Keep track of whether the floating action buttons are hidden or expanded
     private boolean add_menu_expanded = false;
 
+    // Handlers to get images from the camera
     private CameraHandler camera_handler;
+    // Handler to edit images
     private ImageEditHandler image_edit_handler;
 
     @Override
@@ -77,9 +83,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         setupButtons();
         setupList();
         setupActionBar();
-        client = BtClient.getClient(getApplicationContext());
+        client = model.getClient();
         client.setConnectListener(this);
         client.setBluetoothListener(this);
+        client.setErrorListener(this);
         if (!checkPermissionBluetooth())
             askPermissionBluetooth();
     }
@@ -88,16 +95,23 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     protected void onStart() {
         super.onStart();
         client.onStart();
-        if(!client.isBluetoothEnabled())
-            client.enableBt(this);
     }
 
     @Override
     protected void onStop() {
-        client.onStop();
+
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        client.onStop();
+        client.onDestroy();
+        super.onDestroy();
+    }
+    /**
+     * Finds all interesting views we need to control
+     */
     private void findGlobalViews() {
         view = findViewById(R.id.main_layout);
         queue_list = view.findViewById(R.id.main_queue_list);
@@ -106,6 +120,9 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_gallery = findViewById(R.id.main_fab_gallery);
     }
 
+    /**
+     * Readies all buttons
+     */
     private void setupButtons() {
         queue_add.setOnClickListener(v -> {
             if (add_menu_expanded) {
@@ -128,6 +145,9 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_gallery.hide();
     }
 
+    /**
+     * Readies our list
+     */
     private void setupList() {
         adapter = new QueueAdapter(this, this);
         model.getQueue().observe(this, adapter);
@@ -136,6 +156,9 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         queue_list.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
     }
 
+    /**
+     * Readies our action bar
+     */
     private void setupActionBar() {
         Toolbar myToolbar = findViewById(R.id.main_toolbar);
         setSupportActionBar(myToolbar);
@@ -145,18 +168,24 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             actionbar.setTitle("Pythonator");
     }
 
+    /**
+     * Send an image. May fail under certain circumstances, such as no bluetooth enabled.
+     * @param image The image to send
+     */
     private void sendImage(@NonNull ImageQueueItem image) {
-        if (image.isSent()) {
-            Snackbar.make(view, "Item is already sent to the server", Snackbar.LENGTH_LONG).show();
+        if (image.getState() != ImageState.NOT_SENT)
             return;
-        }
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int retries = preferences.getInt("retries", 4);
-        if (!client.sendImage(image))
+        if (!client.sendImage(image)) {
+            Snackbar.make(view, "Could not send image to server: Not connected to server!", Snackbar.LENGTH_LONG).show();
             startConnect();
+        }
     }
 
+    /**
+     * Capture an image. The result can be found in {@link #onActivityResult(int, int, Intent)},
+     * with requestcode {@link CameraHandler#REQUEST_CAPTURE}
+     */
     private void capture() {
         if (!checkPermissionCamera()) {
             askPermissionCamera();
@@ -166,6 +195,10 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         camera_handler.capture(this);
     }
 
+    /**
+     * Pick an image from the gallery. The result can be found in {@link #onActivityResult(int, int, Intent)},
+     * with requestcode {@link #REQUEST_IMAGE_GALLERY}
+     */
     private void gallery() {
         if (!checkPermissionGallery()) {
             askPermissionGallery();
@@ -179,12 +212,18 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         startActivityForResult(intent,REQUEST_IMAGE_GALLERY);
     }
 
+    /**
+     * @return <code>true</code> if we have required bluetooth permissions, <code>false</code> otherwise
+     */
     private boolean checkPermissionBluetooth() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * Asks required permissions for bluetooth
+     */
     private void askPermissionBluetooth() {
         requestPermissions(new String[]{Manifest.permission.BLUETOOTH,
                 Manifest.permission.BLUETOOTH_ADMIN,
@@ -192,12 +231,18 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 REQUEST_BLUETOOTH_PERMISSION);
     }
 
+    /**
+     * @return <code>true</code> if we have required camera permissions, <code>false</code> otherwise
+     */
     private boolean checkPermissionCamera() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * Asks required permissions for camera
+     */
     private void askPermissionCamera() {
         requestPermissions(new String[]{Manifest.permission.CAMERA,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -205,18 +250,29 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
         }, REQUEST_CAMERA_PERMISSION);
     }
 
+    /**
+     * @return <code>true</code> if we have required gallery permissions, <code>false</code> otherwise
+     */
     private boolean checkPermissionGallery() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * Asks required permissions for gallery
+     */
     private void askPermissionGallery() {
         requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_GALLERY_PERMISSION);
     }
 
+    /**
+     *  If bluetooth is enabled ({@link BtClient#isBluetoothEnabled()}), tries to connect to our preferred server
+     */
     public void startConnect() {
-        if (!client.connect(PreferenceManager.getDefaultSharedPreferences(this).getString("bluetooth_host", "Pythonator")))
-            client.enableBt(this);
+        if (!client.isBluetoothEnabled())
+            client.enableBluetooth(this);
+        else
+            client.connect(PreferenceManager.getDefaultSharedPreferences(this).getString("bluetooth_host", "Pythonator"));
     }
 
     @Override
@@ -228,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             case R.id.main_menu_bluetooth:
                 if (!client.isConnected()) {
                     if (!client.isBluetoothEnabled()) {
-                        client.enableBt(this);
+                        client.enableBluetooth(this);
                     } else {
                         startConnect();
                     }
@@ -279,7 +335,7 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
                 image_edit_handler = null;
                 break;
         }
-        client.enableBtResult(requestCode, resultCode);
+        client.enableBluetoothResult(requestCode, resultCode);
     }
 
     @Override
@@ -312,7 +368,14 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
 
     @Override
     public void onSwiped(int pos) {
-        model.removeFromQueue(Collections.singletonList(adapter.get(pos)));
+        ImageQueueItem item = adapter.get(pos);
+        model.removeFromQueue(Collections.singletonList(item));
+    }
+
+    @Override
+    public boolean allowSwipe(int pos) {
+        ImageQueueItem item = adapter.get(pos);
+        return item.getState() != ImageState.SENDING;
     }
 
     @Override
@@ -327,13 +390,13 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
     @Override
     public void onSendClicked(int pos) {
         ImageQueueItem item = adapter.get(pos);
-        if (!item.isSent())
-        sendImage(item);
+        if (item.getState() == ImageState.NOT_SENT)
+            sendImage(item);
     }
 
     @Override
-    public void connectStatus(ConnectState state) {
-        switch (state) {
+    public void onConnectStateChange(ConnectState new_state) {
+        switch (new_state) {
             case CONNECTING:
                 runOnUiThread(() -> bluetooth_search.setIcon(R.drawable.ic_bluetooth_searching));
                 break;
@@ -360,5 +423,18 @@ public class MainActivity extends AppCompatActivity implements ConnectListener, 
             .setAction("Try again", v -> startConnect())
             .show()
         );
+    }
+
+    @Override
+    public void onError(ErrorType error) {
+        runOnUiThread(() -> {
+            String text = "There was an error: ";
+            switch (error) {
+                case OUT_OF_BOUNDS: text += "Drawn object would be out of bounds"; break;
+                case UNKNOWN_COMMAND: text += "Server does not recognize command"; break;
+                case IO_ERROR: text += "There was an IO error"; break;
+            }
+            Snackbar.make(view, text, Snackbar.LENGTH_LONG).show();
+        });
     }
 }

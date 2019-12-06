@@ -16,8 +16,14 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.python.pythonator.R;
 
+/**
+ * Very small settings activity, to handle our few user-configurable settings
+ */
 public class SettingsActivity extends AppCompatActivity {
+
+    // Interesting UI components we must control
     private EditText bluetooth_host, bluetooth_search;
+    // Storage for settings like these, where we need to read/write settings
     private SharedPreferences preferences;
 
     @Override
@@ -29,11 +35,18 @@ public class SettingsActivity extends AppCompatActivity {
         setValues();
     }
 
+    /**
+     * Finds all interesting views we need to control
+     */
     private void findGlobalViews() {
         bluetooth_host = findViewById(R.id.settings_bluetooth_host);
         bluetooth_search = findViewById(R.id.settings_bluetooth_retry);
     }
 
+    /**
+     * Writes all settings as they currently are, back to the sharedpreferences
+     * @see SharedPreferences
+     */
     private void setValues() {
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -43,6 +56,9 @@ public class SettingsActivity extends AppCompatActivity {
         bluetooth_search.setText(String.valueOf(bluetooth_search_secs));
     }
 
+    /**
+     * Readies our action bar
+     */
     private void setupActionBar() {
         Toolbar myToolbar = findViewById(R.id.settings_toolbar);
         setSupportActionBar(myToolbar);
@@ -59,6 +75,9 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * @return <code>true</code> if current settings are legitimate, <code>false</code> otherwise
+     */
     private boolean checkValues() {
         String new_host = bluetooth_host.getText().toString();
         int new_time = Integer.parseInt(bluetooth_search.getText().toString());

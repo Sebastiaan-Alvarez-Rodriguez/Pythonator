@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.python.pythonator.ui.templates.adapter.listener.AdapterListener;
 import com.python.pythonator.ui.templates.adapter.listener.DragListener;
 import com.python.pythonator.ui.templates.adapter.touch.TouchCallback;
@@ -22,6 +23,7 @@ import java.util.List;
  * Template to create an Adapter, which works with architecture LiveData
  * @param <T> The type of items of the list to be displayed
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> implements Observer<List<T>>, InternalClickListener, DragListener {
 
     protected List<T> list;
@@ -164,5 +166,11 @@ public abstract class Adapter<T> extends RecyclerView.Adapter<ViewHolder<T>> imp
         List<T> added = ListUtil.getAdded(list, newList);
         remove(removed);
         add(added);
+    }
+
+
+    @Override
+    public boolean allowItemDismiss(int position) {
+        return adapter_listener.allowSwipe(position);
     }
 }

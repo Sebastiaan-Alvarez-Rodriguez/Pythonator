@@ -1,6 +1,9 @@
 package com.python.pythonator.ui.main.adapter;
 
 import android.view.View;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -60,7 +63,25 @@ public class QueueViewHolder extends ViewHolder<ImageQueueItem> {
                     send_button.setVisibility(View.VISIBLE);
                     break;
                 case SENT:
-                    send_button.setVisibility(View.GONE);
+                    sending_overlay.setVisibility(View.INVISIBLE);
+                    send_button.setBackgroundResource(R.drawable.ic_check);
+                    send_button.setVisibility(View.VISIBLE);
+                    break;
+                case DRAWN:
+                    send_button.setBackgroundResource(R.drawable.ic_snake);
+                    send_button.setOnClickListener(v -> {
+                        AnimationSet animSet = new AnimationSet(true);
+                        animSet.setInterpolator(new DecelerateInterpolator());
+                        animSet.setFillAfter(true);
+                        animSet.setFillEnabled(true);
+
+                        final RotateAnimation animRotate = new RotateAnimation(0.0f, -90.0f, RotateAnimation.RELATIVE_TO_SELF, 0.5f,RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                        animRotate.setDuration(1000);
+                        animRotate.setFillAfter(true);
+                        animSet.addAnimation(animRotate);
+
+                        send_button.startAnimation(animSet);
+                    });
                     break;
             }
         }));

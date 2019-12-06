@@ -11,11 +11,17 @@ import androidx.annotation.WorkerThread;
 import com.python.pythonator.ui.templates.ResultCallback;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
 import static com.python.pythonator.util.FileUtil.getFileSize;
 
+/**
+ * One of the most important classes of this project: Exposes (potentially huge) images to our application
+ */
+@SuppressWarnings("unused")
 public class Image {
     private String abs_path;
     private String size;
@@ -24,28 +30,44 @@ public class Image {
     public Image(@NonNull String abs_path) {
         this.abs_path = abs_path;
         this.size = getFileSize(abs_path);
-        this.format = Bitmap.CompressFormat.PNG;
-//        rotateImage();
+        this.format = Bitmap.CompressFormat.JPEG;
     }
 
+    /**
+     * Sets conversion format to PNG
+     * @return Self
+     */
     @CheckResult
     public @NonNull Image setPNG() {
         format = Bitmap.CompressFormat.PNG;
         return this;
     }
 
+    /**
+     * Sets conversion format to JPEG
+     * @return Self
+     */
     @CheckResult
     public @NonNull Image setJPEG() {
         format = Bitmap.CompressFormat.JPEG;
         return this;
     }
 
+    /**
+     * Sets conversion format to WEBP
+     * @return Self
+     */
     @CheckResult
     public @NonNull Image setWEBP() {
         format = Bitmap.CompressFormat.WEBP;
         return this;
     }
 
+    /**
+     * Be aware when calling this function: An image may be 4K, resulting in hanging UI's
+     * @param quality The quality of the bitmap to return. Format PNG ignores this value
+     * @return the bitmap of this image, with given quality
+     */
     @CheckResult
     @WorkerThread
     public @NonNull Bitmap getBitmap(int quality) {
@@ -55,29 +77,55 @@ public class Image {
         return bitmap;
     }
 
+    /**
+     * @return Human readable size of this image (e.g. 2.5MB)
+     */
     @CheckResult
     public String getSize() {
         return size;
     }
 
+    /**
+     * @return Path to the image
+     */
     @CheckResult
     public String getPath() {
         return abs_path;
     }
 
+    /**
+     * Execute this function in a thread: Image reading and oompression will otherwise hang UI
+     * @return bytes of the bitmap
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @CheckResult
     @WorkerThread
     public byte[] getBitmapBytes() {
         Bitmap bitmap = BitmapFactory.decodeFile(abs_path);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        bitmap.compress(format, 100, os);
-        byte[] array = os.toByteArray();
+        byte[] array = null;
+        if (format == Bitmap.CompressFormat.JPEG && (abs_path.endsWith(".jpg") || abs_path.endsWith(".jpeg")) ||
+                format == Bitmap.CompressFormat.PNG && (abs_path.endsWith(".png"))) { //No compress if we already have the right type
+            try {
+                File f = new File(abs_path);
+                array = new byte[(int)f.length()];
+                FileInputStream fin = new FileInputStream(f);
+                fin.read(array);
+                fin.close();
+            } catch (Exception ignored) {}
+        } else {
+            bitmap.compress(format, 100, os);
+            array = os.toByteArray();
+        }
         try {
             os.close();
         } catch (IOException ignored) {}
         return array;
     }
 
+    /**
+     * @return width of image
+     */
     @CheckResult
     public int getWidth() {
         BitmapFactory.Options o = new BitmapFactory.Options();
@@ -86,6 +134,9 @@ public class Image {
         return o.outWidth;
     }
 
+    /**
+     * @return height of image
+     */
     @CheckResult
     public int getHeight() {
         BitmapFactory.Options o = new BitmapFactory.Options();
@@ -115,17 +166,6 @@ public class Image {
             callback.onResult(BitmapFactory.decodeFile(abs_path, options));
         });
     }
-
-//    /**
-//     * Rotates the image to always be in 'landscape' mode
-//     */
-//    private void rotateImage() {
-//        if (bitmap.getHeight() > bitmap.getWidth()) {
-//            Matrix matrix = new Matrix();
-//            matrix.postRotate(270);
-//            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-//        }
-//    }
 
     /**
      * Calculates samplesize for image downscaling/thumbnailing
