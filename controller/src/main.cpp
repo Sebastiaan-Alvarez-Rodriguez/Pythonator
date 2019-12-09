@@ -12,6 +12,7 @@ struct BotConfigInfo {
     std::ostream* file_stream;
     size_t canvas_width;
     size_t canvas_height;
+    size_t canvas_scale;
 };
 
 struct BluetoothConfigInfo {
@@ -50,12 +51,14 @@ speed_t get_baud_rate(size_t baud_rate) {
             return B19200;
         case 38400:
             return B38400;
+        case 115200:
+            return B115200;
         default:
             throw IllegalConfigException("Unknown baud rate: ", baud_rate);
     }
 }
 
-BotConfigInfo parse_bot_device_config(Config& config, size_t width, size_t height) {
+BotConfigInfo parse_bot_device_config(Config& config, size_t width, size_t height, size_t scale) {
     if(!config.contains("bot.device.io_descriptor"))
         throw IllegalConfigException("No IO descriptor provided for hardware device backend");
     if(!config.contains("bot.device.baud_rate"))
@@ -65,42 +68,46 @@ BotConfigInfo parse_bot_device_config(Config& config, size_t width, size_t heigh
 
     size_t canvas_width = config.putIfNew("bot.device.canvas_width", new ConfigInteger(width))->getInteger();
     size_t canvas_height = config.putIfNew("bot.device.canvas_width", new ConfigInteger(height))->getInteger();
+    size_t canvas_scale = config.putIfNew("bot.device.canvas_scale", new ConfigInteger(scale))->getInteger();
 
     BotInfo bot_info;
     bot_info.device_name = filename;
     bot_info.baud_rate = get_baud_rate(baud_rate);
-    return BotConfigInfo{new BotController(bot_info), nullptr, canvas_width, canvas_height};
+    return BotConfigInfo{new BotController(bot_info), nullptr, canvas_width, canvas_height, canvas_scale};
 }
 
-BotConfigInfo parse_bot_bitprinter_config(Config& config, size_t width, size_t height) {
+BotConfigInfo parse_bot_bitprinter_config(Config& config, size_t width, size_t height, size_t scale) {
     std::string file_name = config.putIfNew("bot.bitprinter.output_file", new ConfigString("/dev/stdout"))->getString();
     std::ofstream* new_file = new std::ofstream(file_name);
     size_t canvas_width = config.putIfNew("bot.bitprinter.canvas_width", new ConfigInteger(width))->getInteger();
     size_t canvas_height = config.putIfNew("bot.bitprinter.canvas_height", new ConfigInteger(height))->getInteger();
-    return BotConfigInfo{new BotBitPrinter(*new_file), new_file, canvas_width, canvas_height};
+    size_t canvas_scale = config.putIfNew("bot.bitprinter.canvas_scale", new ConfigInteger(scale))->getInteger();
+    return BotConfigInfo{new BotBitPrinter(*new_file), new_file, canvas_width, canvas_height, canvas_scale};
 }
 
-BotConfigInfo parse_bot_textprinter_config(Config& config, size_t width, size_t height) {
+BotConfigInfo parse_bot_textprinter_config(Config& config, size_t width, size_t height, size_t scale) {
     std::string file_name = config.putIfNew("bot.textprinter.output_file", new ConfigString("/dev/stdout"))->getString();
     std::ofstream* new_file = new std::ofstream(file_name);
     size_t canvas_width = config.putIfNew("bot.textprinter.canvas_width", new ConfigInteger(width))->getInteger();
     size_t canvas_height = config.putIfNew("bot.textprinter.canvas_height", new ConfigInteger(height))->getInteger();
-    return BotConfigInfo{new BotPrinter(*new_file), new_file, canvas_width, canvas_height};
+    size_t canvas_scale = config.putIfNew("bot.textprinter.canvas_scale", new ConfigInteger(scale))->getInteger();
+    return BotConfigInfo{new BotPrinter(*new_file), new_file, canvas_width, canvas_height, canvas_scale};
 }
 
 BotConfigInfo parse_bot_config(Config& config) {
     const ConfigValue* value = config.putIfNew("bot.backend", new ConfigString("device"));
 
     size_t default_width = config.putIfNew("bot.canvas_width", new ConfigInteger(1500))->getInteger();
-    size_t default_height = config.putIfNew("bot.canvas_height", new ConfigInteger(1500))->getInteger();
+    size_t default_height = config.putIfNew("bot.canvas_height", new ConfigInteger(1500))->getInteger();    
+    size_t canvas_scale = config.putIfNew("bot.canvas_scale", new ConfigInteger(4))->getInteger();
 
     std::string device_type = value->getString();
     if(device_type == "bitprinter")
-        return parse_bot_bitprinter_config(config, default_width, default_height);
+        return parse_bot_bitprinter_config(config, default_width, default_height, canvas_scale);
     else if(device_type == "textprinter")
-        return parse_bot_textprinter_config(config, default_width, default_height);
+        return parse_bot_textprinter_config(config, default_width, default_height, canvas_scale);
     else
-        return parse_bot_device_config(config, default_width, default_height);
+        return parse_bot_device_config(config, default_width, default_height, canvas_scale);
 }
 
 BluetoothConfigInfo parse_bluetooth_config(Config& config) {
@@ -116,7 +123,7 @@ int main(int argc, char* argv[]) {
     Config config = parser.parse();
     BotConfigInfo bot_config = parse_bot_config(config);
     BluetoothConfigInfo bluetooth_config = parse_bluetooth_config(config);
-    BluetoothServer server(*bot_config.device, bluetooth_config.channel, bot_config.canvas_width, bot_config.canvas_height);
+    BluetoothServer server(*bot_config.device, bluetooth_config.channel, bot_config.canvas_width, bot_config.canvas_height, bot_config.canvas_scale);
     server.start();
 
     delete bot_config.device;

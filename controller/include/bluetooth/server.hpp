@@ -15,11 +15,11 @@ class BluetoothServer {
         volatile bool active = true;
         BotDevice& bot_controller;
         QueueLock queue_lock;
-        size_t canvas_width, canvas_height;
+        size_t canvas_width, canvas_height, canvas_scale;
 
         void handle(int, struct sockaddr_rc);
     public:
-        BluetoothServer(BotDevice&, size_t, size_t, size_t);
+        BluetoothServer(BotDevice&, size_t, size_t, size_t, size_t);
         ~BluetoothServer();
 
         void start();

@@ -16,11 +16,14 @@ class ImageProcessor {
         std::vector<std::pair<Coord, Coord>> result_data;
 
         cv::Mat edgeDetect(double, int, int, int) const;
+
+        size_t findNextEdge(Coord, bool*, size_t);
     public:
         ImageProcessor(uint8_t*, size_t);
         ~ImageProcessor();
 
-        void transform(size_t, size_t);
+        void transform(size_t, size_t, size_t);
+        void optimize();
 
         inline const std::vector<std::pair<Coord, Coord>>& getData() const {
             return this->result_data;

@@ -46,6 +46,13 @@ class BluetoothException : public ProgramException {
         virtual ~BluetoothException() = default;
 };
 
+class ImageException : public ProgramException {
+    public:
+        template <typename... T>
+        ImageException(const T&... args) : ProgramException(args...) {}
+        virtual ~ImageException() = default;
+};
+
 class USBException : public ProgramException {
     public:
         template <typename... T>

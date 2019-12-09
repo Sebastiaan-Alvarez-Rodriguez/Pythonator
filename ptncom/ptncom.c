@@ -67,21 +67,19 @@ bool set_attribs(int fd, speed_t speed, int parity) {
     cfsetispeed(&tty, speed);
     cfsetospeed(&tty, speed);
 
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
-
-    tty.c_iflag &= ~IGNBRK;
-    tty.c_lflag = 0;
-
+    //Turn of input processing
+    tty.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
+    //Turn of output processing
     tty.c_oflag = 0;
-    tty.c_cc[VMIN]  = 0;
-    tty.c_cc[VTIME] = 5;
+    //Turn of line processing
+    tty.c_lflag = ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
+    //Disable pararity checking, clear char size mask, force 8 bit char size mask
+    tty.c_cflag = ~(CSIZE | PARENB);
+    tty.c_cflag |= CS8;
 
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
-    tty.c_cflag |= (CLOCAL | CREAD);
-    tty.c_cflag &= ~(PARENB | PARODD);
-    tty.c_cflag |= parity;
-    tty.c_cflag &= ~CSTOPB;
-    tty.c_cflag &= ~CRTSCTS;
+    //Read blocks until one byte is received, no timeout between characters
+    tty.c_cc[VMIN] = 1;
+    tty.c_cc[VTIME] = 0;
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0) {
         return false;

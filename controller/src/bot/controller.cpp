@@ -1,5 +1,6 @@
 #include "bot/controller.hpp"
 #include "error/exceptions.hpp"
+#include "error/logging.hpp"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -7,6 +8,7 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <cstring>
+#include <sstream>
 
 BotController::BotController(const BotInfo& bot_device) {
     this->usb_port = open(bot_device.device_name.c_str(), O_RDWR | O_NOCTTY);
@@ -27,25 +29,22 @@ BotController::BotController(const BotInfo& bot_device) {
     cfsetospeed(&tty, bot_device.baud_rate);
     cfsetispeed(&tty, bot_device.baud_rate);
 
-    //Turn of input processing
-    tty.c_iflag &= ~(IGNBRK | BRKINT | ICRNL | INLCR | PARMRK | INPCK | ISTRIP | IXON);
-    //Turn of output processing
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
+
+    tty.c_iflag &= ~IGNBRK;
+    tty.c_lflag = 0;
+
     tty.c_oflag = 0;
-    //Turn of line processing
-    tty.c_lflag = ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
-    //Disable pararity checking, clear char size mask, force 8 bit char size mask
-    tty.c_cflag = ~(CSIZE | PARENB);
-    tty.c_cflag |= CS8;
+    tty.c_cc[VMIN]  = 1;
+    tty.c_cc[VTIME] = 5;
 
-    //Read blocks until one byte is received, no timeout between characters
-    tty.c_cc[VMIN] = 1;
-    tty.c_cc[VTIME] = 0;
-
-    //Use for raw binary IO
-    cfmakeraw(&tty);
-
-    tcflush(this->usb_port, TCIFLUSH);
-    if(tcsetattr(this->usb_port, TCSAFLUSH, &tty) != 0) {
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+    tty.c_cflag |= (CLOCAL | CREAD);
+    tty.c_cflag &= ~(PARENB | PARODD);
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CRTSCTS;
+    
+    if(tcsetattr(this->usb_port, TCSANOW, &tty) != 0) {
         close(this->usb_port);
         throw USBException("Failed to set USB attributes");
     }
@@ -62,12 +61,25 @@ BotStatus BotController::printCommand(const std::unique_ptr<BotCommand>& command
 
     ssize_t result = write(this->usb_port, command_buffer, command_size);
     delete[] command_buffer;
-    if(result < 0 || (size_t)result != command_size)
+    if(result < 0 || (size_t)result != command_size) {
+        log_error("Bot IO error during write, result: %lld", (long long)result);
         return BotStatus::IO_ERROR;
+    }
 
-    BotStatus usb_result;
+    BotStatus usb_result = BotStatus::SUCCESS;
     result = read(this->usb_port, &usb_result, sizeof(usb_result));
-    if(result < 0 || (size_t)result != sizeof(usb_result))
+    if(result < 0 || (size_t)result != sizeof(usb_result)) {
+        log_error("Bot IO error during read, result: %lld", (long long)result);
         return BotStatus::IO_ERROR;
+    }
+    
+    if(usb_result != BotStatus::SUCCESS) {
+        log_error("Bot returned status %d", (int)usb_result);
+        
+        std::stringstream ss;
+        command->print(ss);
+        std::string str = ss.str();
+        log_error("Command: %s", str.c_str());
+    }
     return usb_result;
 }
