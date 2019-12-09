@@ -19,12 +19,19 @@ import java.util.List;
 
 import static com.python.pythonator.util.FileUtil.createImageFile;
 
+/**
+ * Class to handle image editing requests
+ */
 public class ImageEditHandler {
 
+    // Just another request tag
     public static final int REQUEST_IMAGE_EDIT = 500;
 
+    // We need context to be able to make files (which is needed to store the edited file as copy)
     private @NonNull Context context;
+    // The path to the edited file
     private String filepath;
+    // The image
     private ImageQueueItem image;
 
     public ImageEditHandler(@NonNull Context context, @NonNull ImageQueueItem image) {
@@ -33,10 +40,16 @@ public class ImageEditHandler {
         filepath = null;
     }
 
+    /**
+     * @return The old (unedited) image
+     */
     public final @NonNull ImageQueueItem getImageQueueItem() {
         return image;
     }
 
+    /**
+     * @return The path to the edited image
+     */
     public final @Nullable String getEditedPath() {
         return filepath;
     }

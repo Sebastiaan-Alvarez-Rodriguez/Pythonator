@@ -3,24 +3,20 @@ package com.python.pythonator.ui.camera;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 
-import androidx.annotation.CheckResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
-import androidx.fragment.app.Fragment;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import static com.python.pythonator.util.FileUtil.createImageFile;
 
+/**
+ * Class to handle taking pictures with the camera
+ */
 public class CameraHandler {
     public static final int REQUEST_CAPTURE = 300;
 
@@ -44,19 +40,15 @@ public class CameraHandler {
     }
 
     /**
-     * @see #capture(Activity)
-     * Same function, but for fragment callers
+     * @return Path to the image file
      */
-    public void capture(@NonNull Fragment fragment) {
-        Intent intent = createCaptureIntent();
-        if (intent != null)
-            fragment.startActivityForResult(Intent.createChooser(intent, null), REQUEST_CAPTURE);
-    }
-
     public String getFilepath() {
         return filepath;
     }
 
+    /**
+     * @return Intent which, if sent, will open a frame where user may choose camera app, takes picture, stores it in gallery
+     */
     private @Nullable Intent createCaptureIntent() {
         Intent ext_photo_intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         File photo_file = createImageFile(context);
@@ -67,8 +59,10 @@ public class CameraHandler {
         return Intent.createChooser(ext_photo_intent, "Take a picture");
     }
 
-
-
+    /**
+     * Makes new picture accessible by the gallery (and other apps).
+     * We do this, since people might want to share their created photos
+     */
     public void addPictureToGallery() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(filepath);

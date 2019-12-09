@@ -1,6 +1,9 @@
 package com.python.pythonator.backend.connection;
 
-public enum  ConnectState {
+/**
+ * Values to separate different connection states
+ */
+public enum ConnectState {
     DISCONNECTED,
     CONNECTING,
     NOT_FOUND,
