@@ -30,9 +30,12 @@ cv::Mat ImageProcessor::edgeDetect(double blur_sigma, int low, int high, int ker
     return result;
 }
 
-void ImageProcessor::transform(size_t target_width, size_t target_height) {
+void ImageProcessor::transform(size_t target_width_orig, size_t target_height_orig, size_t scale_factor) {
     size_t original_width = this->image.size().width;
     size_t original_height = this->image.size().height;
+    
+    size_t target_width = target_width_orig / scale_factor;
+    size_t target_height = target_height_orig / scale_factor;
 
     float scale_factor_width = (float)target_width / (float)original_width;
     float scale_factor_height = (float)target_height / (float)original_height;
@@ -67,11 +70,11 @@ void ImageProcessor::transform(size_t target_width, size_t target_height) {
             current_coord.y = it2.y;
             if(!first) {
                 std::pair<Coord, Coord> line_data;
-                line_data.first.x = prev_coord.x;
-                line_data.first.y = target_height - prev_coord.y - 1;
+                line_data.first.x = scale_factor * prev_coord.x;
+                line_data.first.y = scale_factor * (target_height - prev_coord.y - 1);
 
-                line_data.second.x = current_coord.x;
-                line_data.second.y = target_height - current_coord.y - 1;
+                line_data.second.x = scale_factor * current_coord.x;
+                line_data.second.y = scale_factor * (target_height - current_coord.y - 1);
                 this->result_data.push_back(line_data);
             }
             else
