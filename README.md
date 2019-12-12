@@ -2,6 +2,25 @@
 
 ## Compiling
 
+### App
+The app has been developped for Android, in Android Studio, on a Windows machine.
+You can use Android Studio for other operating systems, too, but the Windows one handles dependencies automatically.
+
+In order to work with the source code of the app, please follow the following instructions:
+ 1. Go to [https://developer.android.com/studio](https://developer.android.com/studio) and download Android Studio for Windows
+ 2. Once Downloaded, run the installer
+ 3. When booting up for the first time, Android Studio will ask you what project you want to make/open. Choose to open a project. Navigate to where you placed the source code of the app. Select the folder named 'app' with a distinctive Android Studio-icon instead of a folder-icon, and hit OK.
+ 4. Android Studio opens the project, and may tell you that it needs some libraries (in the right-bottom corner of the screen).
+   Just click the blue link to start downloading and installing
+ 5. Now, Android Studio is ready: compile the source code by clicking Build > Make Project ('Build' is found in top menu). This project contains no errors, so making the project should be succesfull.
+Now you can look around the source code.
+
+In order to generate an APK (Android PacKage, app install package for Android phones):
+ 1. Go to Build > Generate Signed APK ('Build' is found in top menu)
+ 2. Check V2 Full APK Signature, pick a directory to store build output (including APK) and click Next
+ 3. Create a signing key (fill out a password, fabricate a package) and click next
+ 4. Apk is generated as 'release.apk' in the folder you specified in step 2.
+
 ### Controller software
 Compilation instructions for the controller:
 
