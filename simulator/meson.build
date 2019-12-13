@@ -27,7 +27,6 @@ add_project_arguments(
 )
 
 dependencies = [
-    #dependency('opengl'),
     dependency('glfw3'),
     dependency('threads'),
     subproject('glad').get_variable('glad_dep')
